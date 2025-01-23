@@ -33,6 +33,7 @@
                     <th>Compromiso</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
+                    <th>Fecha de Creación</th>
                 </tr>
             </thead>
             <tbody id="commitmentList">
@@ -52,6 +53,7 @@
             const leaderName = document.getElementById('leaderName').value;
             const commitment = document.getElementById('commitment').value;
             const observation = document.getElementById('observation').value;
+            const creationDate = new Date();
 
             // Crear una nueva fila en la tabla
             const row = document.createElement('tr');
@@ -59,16 +61,47 @@
             row.innerHTML = `
                 <td>${leaderName}</td>
                 <td>${commitment}</td>
-                <td><button class="btn btn-success btn-sm">Activo</button></td>
+                <td><button class="btn btn-success btn-sm status-button">Activo</button></td>
                 <td>${observation}</td>
+                <td>${creationDate.toLocaleDateString()}</td>
             `;
 
             // Agregar la fila a la tabla
             commitmentList.appendChild(row);
 
+            // Verificar el estado dinámicamente
+            updateStatus(row, creationDate);
+
             // Limpiar el formulario
             form.reset();
         });
+
+        function updateStatus(row, creationDate) {
+            const statusButton = row.querySelector('.status-button');
+            const now = new Date();
+            const timeDiff = Math.floor((now - creationDate) / (1000 * 60 * 60 * 24));
+
+            if (timeDiff > 30) {
+                statusButton.textContent = 'Vencido';
+                statusButton.className = 'btn btn-danger btn-sm status-button';
+            } else if (timeDiff > 15) {
+                statusButton.textContent = 'Pendiente';
+                statusButton.className = 'btn btn-warning btn-sm status-button';
+            } else {
+                statusButton.textContent = 'Activo';
+                statusButton.className = 'btn btn-success btn-sm status-button';
+            }
+        }
+
+        // Actualizar estados cada minuto
+        setInterval(() => {
+            const rows = commitmentList.querySelectorAll('tr');
+            rows.forEach(row => {
+                const dateCell = row.cells[4].textContent;
+                const creationDate = new Date(dateCell);
+                updateStatus(row, creationDate);
+            });
+        }, 60000);
     </script>
 
 </body>
