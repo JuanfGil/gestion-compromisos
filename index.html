@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Compromisos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Gestión de Compromisos con Líderes</h1>
+        <form id="commitmentForm" class="mt-4">
+            <div class="mb-3">
+                <label for="leaderName" class="form-label">Nombre del Líder</label>
+                <input type="text" id="leaderName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="commitment" class="form-label">Compromiso</label>
+                <textarea id="commitment" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="observation" class="form-label">Observaciones</label>
+                <textarea id="observation" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Compromiso</button>
+        </form>
+
+        <h2 class="mt-5">Lista de Compromisos</h2>
+        <table class="table table-bordered mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nombre del Líder</th>
+                    <th>Compromiso</th>
+                    <th>Estado</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody id="commitmentList">
+                <!-- Aquí se agregarán dinámicamente los compromisos -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const form = document.getElementById('commitmentForm');
+        const commitmentList = document.getElementById('commitmentList');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Capturar los datos del formulario
+            const leaderName = document.getElementById('leaderName').value;
+            const commitment = document.getElementById('commitment').value;
+            const observation = document.getElementById('observation').value;
+
+            // Crear una nueva fila en la tabla
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${leaderName}</td>
+                <td>${commitment}</td>
+                <td><button class="btn btn-success btn-sm">Activo</button></td>
+                <td>${observation}</td>
+            `;
+
+            // Agregar la fila a la tabla
+            commitmentList.appendChild(row);
+
+            // Limpiar el formulario
+            form.reset();
+        });
+    </script>
+
+</body>
+</html>
