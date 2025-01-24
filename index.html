@@ -78,6 +78,25 @@
             // Agregar a la tabla
             addCommitmentToTable(newCommitment);
 
+            // Enviar notificación al guardar un nuevo compromiso
+            fetch('http://localhost:3000/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: 'juanfelipegilmora2024@gmail.com', // Reemplaza con el correo del destinatario
+                    subject: `Nuevo compromiso activo`,
+                    message: `Se ha creado un nuevo compromiso para el líder ${leaderName} con estado Activo.`
+                })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Correo enviado correctamente.');
+                } else {
+                    console.error('Error al enviar el correo.');
+                }
+            });
+
             // Limpiar el formulario
             form.reset();
         });
