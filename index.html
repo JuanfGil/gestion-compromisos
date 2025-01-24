@@ -67,7 +67,8 @@
                 leaderName,
                 commitment,
                 observation,
-                creationDate: creationDate.toISOString()
+                creationDate: creationDate.toISOString(),
+                notified: { active: false, pending: false, expired: false } // Flags de notificación
             };
 
             // Guardar en LocalStorage
@@ -77,25 +78,6 @@
 
             // Agregar a la tabla
             addCommitmentToTable(newCommitment);
-
-            // Enviar notificación al guardar un nuevo compromiso
-            fetch('https://3259-2800-484-a37a-300-6d39-822f-a970-f1c4.ngrok-free.app/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com',
-                    subject: `Nuevo compromiso activo`,
-                    message: `Se ha creado un nuevo compromiso para el líder ${leaderName}. Compromiso: ${commitment}. Estado: Activo.`
-                })
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Correo enviado correctamente.');
-                } else {
-                    console.error('Error al enviar el correo.');
-                }
-            });
 
             // Limpiar el formulario
             form.reset();
@@ -116,7 +98,7 @@
             `;
 
             // Verificar el estado dinámicamente
-            updateStatus(row, creationDate);
+            updateStatus(row, creationDate, commitment);
 
             // Agregar evento de eliminación con confirmación
             const deleteButton = row.querySelector('.delete-button');
@@ -131,33 +113,38 @@
             commitmentList.appendChild(row);
         }
 
-        function updateStatus(row, creationDate) {
+        function updateStatus(row, creationDate, commitment) {
             const statusButton = row.querySelector('.status-button');
             const now = new Date();
             const timeDiff = Math.floor((now - creationDate) / (1000 * 60)); // Diferencia en minutos
             const leaderName = row.cells[0].textContent; // Nombre del líder
-            const commitment = row.cells[1].textContent; // Compromiso
-            let currentStatus = statusButton.textContent;
+            const commitmentText = row.cells[1].textContent; // Compromiso
 
-            if (timeDiff > 2 && currentStatus !== 'Vencido') { // 2 minutos para "Vencido"
+            if (timeDiff > 2 && !commitment.notified.expired) { // 2 minutos para "Vencido"
                 statusButton.textContent = 'Vencido';
                 statusButton.className = 'btn btn-danger btn-sm status-button';
-                currentStatus = 'Vencido';
-
-                // Enviar notificación por correo para "Vencido"
-                sendEmailNotification('Vencido', leaderName, commitment);
-            } else if (timeDiff > 1 && currentStatus !== 'Pendiente') { // 1 minuto para "Pendiente"
+                commitment.notified.expired = true;
+                sendEmailNotification('Vencido', leaderName, commitmentText);
+            } else if (timeDiff > 1 && !commitment.notified.pending) { // 1 minuto para "Pendiente"
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = 'btn btn-warning btn-sm status-button';
-                currentStatus = 'Pendiente';
-
-                // Enviar notificación por correo para "Pendiente"
-                sendEmailNotification('Pendiente', leaderName, commitment);
-            } else if (timeDiff <= 1 && currentStatus !== 'Activo') {
+                commitment.notified.pending = true;
+                sendEmailNotification('Pendiente', leaderName, commitmentText);
+            } else if (timeDiff <= 1 && !commitment.notified.active) {
                 statusButton.textContent = 'Activo';
                 statusButton.className = 'btn btn-success btn-sm status-button';
-                currentStatus = 'Activo';
+                commitment.notified.active = true;
             }
+
+            // Actualizar en LocalStorage
+            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+            const updatedCommitments = storedCommitments.map(c => {
+                if (c.creationDate === commitment.creationDate) {
+                    return commitment;
+                }
+                return c;
+            });
+            localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
         }
 
         function sendEmailNotification(status, leaderName, commitment) {
@@ -190,11 +177,11 @@
 
         // Actualizar estados cada minuto
         setInterval(() => {
-            const rows = commitmentList.querySelectorAll('tr');
-            rows.forEach(row => {
+            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+            commitmentList.querySelectorAll('tr').forEach((row, index) => {
                 const dateCell = row.cells[4].textContent;
                 const creationDate = new Date(dateCell);
-                updateStatus(row, creationDate);
+                updateStatus(row, creationDate, storedCommitments[index]);
             });
         }, 60000);
     </script>
