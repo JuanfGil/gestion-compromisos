@@ -47,6 +47,12 @@
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
+        // Recuperar compromisos de LocalStorage al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+            storedCommitments.forEach(commitment => addCommitmentToTable(commitment));
+        });
+
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -56,20 +62,39 @@
             const observation = document.getElementById('observation').value;
             const creationDate = new Date();
 
-            // Crear una nueva fila en la tabla
+            // Crear un objeto compromiso
+            const newCommitment = {
+                leaderName,
+                commitment,
+                observation,
+                creationDate: creationDate.toISOString()
+            };
+
+            // Guardar en LocalStorage
+            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+            storedCommitments.push(newCommitment);
+            localStorage.setItem('commitments', JSON.stringify(storedCommitments));
+
+            // Agregar a la tabla
+            addCommitmentToTable(newCommitment);
+
+            // Limpiar el formulario
+            form.reset();
+        });
+
+        function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
 
+            const creationDate = new Date(commitment.creationDate);
+
             row.innerHTML = `
-                <td>${leaderName}</td>
-                <td>${commitment}</td>
+                <td>${commitment.leaderName}</td>
+                <td>${commitment.commitment}</td>
                 <td><button class="btn btn-success btn-sm status-button">Activo</button></td>
-                <td>${observation}</td>
+                <td>${commitment.observation}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td><button class="btn btn-danger btn-sm delete-button">Eliminar</button></td>
             `;
-
-            // Agregar la fila a la tabla
-            commitmentList.appendChild(row);
 
             // Verificar el estado dinámicamente
             updateStatus(row, creationDate);
@@ -80,12 +105,12 @@
                 const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
                 if (confirmDelete) {
                     row.remove();
+                    deleteCommitmentFromStorage(commitment.creationDate);
                 }
             });
 
-            // Limpiar el formulario
-            form.reset();
-        });
+            commitmentList.appendChild(row);
+        }
 
         function updateStatus(row, creationDate) {
             const statusButton = row.querySelector('.status-button');
@@ -102,6 +127,12 @@
                 statusButton.textContent = 'Activo';
                 statusButton.className = 'btn btn-success btn-sm status-button';
             }
+        }
+
+        function deleteCommitmentFromStorage(creationDate) {
+            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+            const updatedCommitments = storedCommitments.filter(commitment => commitment.creationDate !== creationDate);
+            localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
         }
 
         // Actualizar estados cada minuto
