@@ -79,13 +79,13 @@
             addCommitmentToTable(newCommitment);
 
             // Enviar notificación al guardar un nuevo compromiso
-            fetch('http://localhost:3000/send-email', {
+            fetch('https://379f-2800-484-a37a-300-e9c9-15b6-a648-c040.ngrok-free.app/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    email: 'juanse.revelo@umariana.edu.co', // Reemplaza con el correo del destinatario
+                    email: 'juanfelipegilmora2024@gmail.com', // Reemplaza con el correo del destinatario
                     subject: `Nuevo compromiso activo`,
                     message: `Se ha creado un nuevo compromiso para el líder ${leaderName}. Compromiso: ${commitment}. Estado: Activo.`
                 })
@@ -167,4 +167,3 @@
 
 </body>
 </html>
-
