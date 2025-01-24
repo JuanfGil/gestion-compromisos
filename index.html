@@ -85,7 +85,7 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com', // Reemplaza con el correo del destinatario
+                    email: 'juanfelipegilmora2024@gmail.com',
                     subject: `Nuevo compromiso activo`,
                     message: `Se ha creado un nuevo compromiso para el líder ${leaderName}. Compromiso: ${commitment}. Estado: Activo.`
                 })
@@ -132,95 +132,54 @@
         }
 
         function updateStatus(row, creationDate) {
-    const statusButton = row.querySelector('.status-button');
-    const now = new Date();
-    const timeDiff = Math.floor((now - creationDate) / (1000 * 60)); // Diferencia en minutos
-    const leaderName = row.cells[0].textContent; // Nombre del líder
-    const commitment = row.cells[1].textContent; // Compromiso
-    let currentStatus = statusButton.textContent;
+            const statusButton = row.querySelector('.status-button');
+            const now = new Date();
+            const timeDiff = Math.floor((now - creationDate) / (1000 * 60)); // Diferencia en minutos
+            const leaderName = row.cells[0].textContent; // Nombre del líder
+            const commitment = row.cells[1].textContent; // Compromiso
+            let currentStatus = statusButton.textContent;
 
-    if (timeDiff > 2 && currentStatus !== 'Vencido') { // 2 minutos para "Vencido"
-        statusButton.textContent = 'Vencido';
-        statusButton.className = 'btn btn-danger btn-sm status-button';
-        currentStatus = 'Vencido';
+            if (timeDiff > 2 && currentStatus !== 'Vencido') { // 2 minutos para "Vencido"
+                statusButton.textContent = 'Vencido';
+                statusButton.className = 'btn btn-danger btn-sm status-button';
+                currentStatus = 'Vencido';
 
-        // Enviar notificación por correo para "Vencido"
-        sendEmailNotification('Vencido', leaderName, commitment);
-    } else if (timeDiff > 1 && currentStatus !== 'Pendiente') { // 1 minuto para "Pendiente"
-        statusButton.textContent = 'Pendiente';
-        statusButton.className = 'btn btn-warning btn-sm status-button';
-        currentStatus = 'Pendiente';
-
-        // Enviar notificación por correo para "Pendiente"
-        sendEmailNotification('Pendiente', leaderName, commitment);
-    } else if (timeDiff <= 1 && currentStatus !== 'Activo') {
-        statusButton.textContent = 'Activo';
-        statusButton.className = 'btn btn-success btn-sm status-button';
-        currentStatus = 'Activo';
-    }
-}
-
-function sendEmailNotification(status, leaderName, commitment) {
-    fetch('https://379f-2800-484-a37a-300-e9c9-15b6-a648-c040.ngrok-free.app/send-email', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            email: 'juanfelipegilmora2024@gmail.com', // Correo del destinatario
-            subject: `Cambio de estado: ${status}`,
-            message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
-        })
-    }).then(response => {
-        if (response.ok) {
-            console.log(`Correo enviado para el estado ${status}`);
-        } else {
-            console.error(`Error al enviar el correo para el estado ${status}`);
-        }
-    }).catch(error => {
-        console.error('Error en la solicitud de correo:', error);
-    });
-} else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
-        statusButton.textContent = 'Pendiente';
-        statusButton.className = 'btn btn-warning btn-sm status-button';
-        currentStatus = 'Pendiente';
-
-        // Enviar notificación por correo para "Pendiente"
-        sendEmailNotification('Pendiente', leaderName, commitment);
-    } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
-        statusButton.textContent = 'Activo';
-        statusButton.className = 'btn btn-success btn-sm status-button';
-        currentStatus = 'Activo';
-    }
-}
-
-function sendEmailNotification(status, leaderName, commitment) {
-    fetch('https://379f-2800-484-a37a-300-e9c9-15b6-a648-c040.ngrok-free.app/send-email', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            email: 'juanfelipegilmora2024@gmail.com', // Correo del destinatario
-            subject: `Cambio de estado: ${status}`,
-            message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
-        })
-    }).then(response => {
-        if (response.ok) {
-            console.log(`Correo enviado para el estado ${status}`);
-        } else {
-            console.error(`Error al enviar el correo para el estado ${status}`);
-        }
-    }).catch(error => {
-        console.error('Error en la solicitud de correo:', error);
-    });
-} else if (timeDiff > 15) {
+                // Enviar notificación por correo para "Vencido"
+                sendEmailNotification('Vencido', leaderName, commitment);
+            } else if (timeDiff > 1 && currentStatus !== 'Pendiente') { // 1 minuto para "Pendiente"
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = 'btn btn-warning btn-sm status-button';
-            } else {
+                currentStatus = 'Pendiente';
+
+                // Enviar notificación por correo para "Pendiente"
+                sendEmailNotification('Pendiente', leaderName, commitment);
+            } else if (timeDiff <= 1 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
                 statusButton.className = 'btn btn-success btn-sm status-button';
+                currentStatus = 'Activo';
             }
+        }
+
+        function sendEmailNotification(status, leaderName, commitment) {
+            fetch('https://3259-2800-484-a37a-300-6d39-822f-a970-f1c4.ngrok-free.app/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: 'juanfelipegilmora2024@gmail.com', // Correo del destinatario
+                    subject: `Cambio de estado: ${status}`,
+                    message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
+                })
+            }).then(response => {
+                if (response.ok) {
+                    console.log(`Correo enviado para el estado ${status}`);
+                } else {
+                    console.error(`Error al enviar el correo para el estado ${status}`);
+                }
+            }).catch(error => {
+                console.error('Error en la solicitud de correo:', error);
+            });
         }
 
         function deleteCommitmentFromStorage(creationDate) {
