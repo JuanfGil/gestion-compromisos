@@ -74,10 +74,13 @@
             // Verificar el estado dinámicamente
             updateStatus(row, creationDate);
 
-            // Agregar evento de eliminación
+            // Agregar evento de eliminación con confirmación
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
-                row.remove();
+                const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
+                if (confirmDelete) {
+                    row.remove();
+                }
             });
 
             // Limpiar el formulario
