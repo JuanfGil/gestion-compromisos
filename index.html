@@ -47,7 +47,6 @@
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
-        // Recuperar compromisos de LocalStorage al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
             storedCommitments.forEach(commitment => addCommitmentToTable(commitment));
@@ -56,13 +55,11 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Capturar los datos del formulario
             const leaderName = document.getElementById('leaderName').value;
             const commitment = document.getElementById('commitment').value;
             const observation = document.getElementById('observation').value;
             const creationDate = new Date();
 
-            // Crear un objeto compromiso
             const newCommitment = {
                 leaderName,
                 commitment,
@@ -70,16 +67,13 @@
                 creationDate: creationDate.toISOString()
             };
 
-            // Guardar en LocalStorage
             const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
             storedCommitments.push(newCommitment);
             localStorage.setItem('commitments', JSON.stringify(storedCommitments));
 
-            // Agregar a la tabla
             addCommitmentToTable(newCommitment);
 
-            // Enviar notificación al guardar un nuevo compromiso
-            fetch('https://0a5d-2800-484-a37a-300-6d39-822f-a970-f1c4.ngrok-free.app/send-email', {
+            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -97,7 +91,6 @@
                 }
             });
 
-            // Limpiar el formulario
             form.reset();
         });
 
@@ -115,10 +108,8 @@
                 <td><button class="btn btn-danger btn-sm delete-button">Eliminar</button></td>
             `;
 
-            // Verificar el estado dinámicamente
             updateStatus(row, creationDate);
 
-            // Agregar evento de eliminación con confirmación
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
@@ -134,22 +125,20 @@
         function updateStatus(row, creationDate) {
             const statusButton = row.querySelector('.status-button');
             const now = new Date();
-            const timeDiff = Math.floor((now - creationDate) / (1000 * 60 * 60 * 24)); // Diferencia en días
-            const leaderName = row.cells[0].textContent; // Nombre del líder
-            const commitment = row.cells[1].textContent; // Compromiso
+            const timeDiff = Math.floor((now - creationDate) / (1000 * 60 * 60 * 24));
+            const leaderName = row.cells[0].textContent;
+            const commitment = row.cells[1].textContent;
             let currentStatus = statusButton.textContent;
 
             if (timeDiff > 30 && currentStatus !== 'Vencido') {
                 statusButton.textContent = 'Vencido';
                 statusButton.className = 'btn btn-danger btn-sm status-button';
 
-                // Enviar notificación por correo para "Vencido"
                 sendEmailNotification('Vencido', leaderName, commitment);
             } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = 'btn btn-warning btn-sm status-button';
 
-                // Enviar notificación por correo para "Pendiente"
                 sendEmailNotification('Pendiente', leaderName, commitment);
             } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
@@ -158,13 +147,13 @@
         }
 
         function sendEmailNotification(status, leaderName, commitment) {
-            fetch('https://0a5d-2800-484-a37a-300-6d39-822f-a970-f1c4.ngrok-free.app/send-email', {
+            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com', // Correo del destinatario
+                    email: 'juanfelipegilmora2024@gmail.com',
                     subject: `Cambio de estado: ${status}`,
                     message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
                 })
@@ -185,7 +174,6 @@
             localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
         }
 
-        // Actualizar estados cada minuto
         setInterval(() => {
             const rows = commitmentList.querySelectorAll('tr');
             rows.forEach(row => {
