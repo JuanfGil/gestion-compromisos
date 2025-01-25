@@ -89,6 +89,8 @@
                 } else {
                     console.error('Error al enviar el correo.');
                 }
+            }).catch(error => {
+                console.error('Error en la solicitud de correo:', error);
             });
 
             form.reset();
