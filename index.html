@@ -114,12 +114,18 @@
 
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
-                const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
-                if (confirmDelete) {
-                    row.remove();
-                    deleteCommitmentFromStorage(commitment.creationDate);
-                }
-            });
+                const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
+        
+                if (password === 'tu-contraseña-segura') { // Reemplaza 'tu-contraseña-segura' con tu contraseña deseada
+                    const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
+                    if (confirmDelete) {
+                        row.remove();
+                        deleteCommitmentFromStorage(commitment.creationDate);
+                    }
+                } else {
+                    alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
+        }
+    });
 
             commitmentList.appendChild(row);
         }
