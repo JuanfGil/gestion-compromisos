@@ -98,13 +98,12 @@
 
         function addCommitmentToTable(commitment) {
     const row = document.createElement('tr');
-
     const creationDate = new Date(commitment.creationDate);
 
     row.innerHTML = `
         <td>${commitment.leaderName}</td>
         <td>${commitment.commitment}</td>
-        <td><button class="btn btn-success btn-sm status-button">Activo</button></td>
+        <td><button class="btn btn-sm status-button">${commitment.state || 'Activo'}</button></td>
         <td>${commitment.observation || ''}</td>
         <td>${creationDate.toLocaleDateString()}</td>
         <td>
@@ -113,47 +112,52 @@
         </td>
     `;
 
-    updateStatus(row, creationDate);
+    // Ajustar el estilo según el estado
+    const statusButton = row.querySelector('.status-button');
+    if (commitment.state === 'Cumplido') {
+        statusButton.className = 'btn btn-info btn-sm';
+    }
 
-    // Botón para eliminar con contraseña
+    commitmentList.appendChild(row);
+
+    // Agregar funcionalidad para botones "Eliminar" y "Compromiso cumplido"
     const deleteButton = row.querySelector('.delete-button');
     deleteButton.addEventListener('click', () => {
         const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-        if (password === 'teresa123') { // Cambia por tu contraseña deseada
-            const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este compromiso?');
-            if (confirmDelete) {
-                row.remove();
-                deleteCommitmentFromStorage(commitment.creationDate);
-            }
+        if (password === 'teresa123') {
+            row.remove();
         } else {
             alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
         }
     });
 
-    // Botón para marcar como cumplido
     const completeButton = row.querySelector('.complete-button');
     completeButton.addEventListener('click', () => {
         const description = prompt('Por favor, escribe una descripción del cumplimiento:');
         if (description) {
-            const statusButton = row.querySelector('.status-button');
-            statusButton.textContent = 'Cumplido';
-            statusButton.className = 'btn btn-info btn-sm status-button';
-            row.cells[3].textContent = description; // Actualiza la columna de observaciones
-            alert('El compromiso ha sido marcado como cumplido.');
+            row.cells[2].textContent = 'Cumplido';
+            row.cells[2].className = 'btn btn-info btn-sm';
+            row.cells[3].textContent = description;
 
-            // Actualizar la descripción en LocalStorage
             const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            const updatedCommitments = storedCommitments.map(storedCommitment => {
-                if (storedCommitment.creationDate === commitment.creationDate) {
-                    storedCommitment.observation = description;
+            const updatedCommitments = storedCommitments.map(commitment => {
+                if (commitment.creationDate === row.cells[4].textContent) {
+                    return {
+                        ...commitment,
+                        state: 'Cumplido',
+                        observation: description
+                    };
                 }
-                return storedCommitment;
+                return commitment;
             });
+
             localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
         } else {
             alert('No se ha proporcionado una descripción del cumplimiento.');
         }
     });
+}
+
 
     commitmentList.appendChild(row);
 }
