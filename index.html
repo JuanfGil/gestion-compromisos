@@ -58,7 +58,6 @@
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
-        // Generar o recuperar el userId único para cada dispositivo
         function getOrCreateUserId() {
             let userId = localStorage.getItem('userId');
             if (!userId) {
@@ -148,7 +147,7 @@
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'teresa123') {
                     row.remove();
-                    deleteCommitmentFromStorage(commitment.creationDate);
+                    deleteCommitmentFromStorage(commitment.id);
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
                 }
@@ -184,6 +183,5 @@
 
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
-
 </body>
 </html>
