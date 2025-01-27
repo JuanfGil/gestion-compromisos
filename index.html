@@ -23,6 +23,10 @@
                 <input type="text" id="responsible" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="responsibleEmail" class="form-label">Correo del Responsable</label>
+                <input type="email" id="responsibleEmail" class="form-control" required>
+            </div>
+            <div class="mb-3">
                 <label for="municipality" class="form-label">Municipio</label>
                 <input type="text" id="municipality" class="form-control" required>
             </div>
@@ -41,6 +45,7 @@
                     <th>Nombre del Líder</th>
                     <th>Compromiso</th>
                     <th>Responsable</th>
+                    <th>Correo del Responsable</th>
                     <th>Municipio</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
@@ -80,6 +85,7 @@
             const leaderName = document.getElementById('leaderName').value;
             const commitment = document.getElementById('commitment').value;
             const responsible = document.getElementById('responsible').value;
+            const responsibleEmail = document.getElementById('responsibleEmail').value;
             const municipality = document.getElementById('municipality').value;
             const observation = document.getElementById('observation').value;
 
@@ -87,12 +93,13 @@
                 leaderName,
                 commitment,
                 responsible,
+                responsibleEmail,
                 municipality,
                 observation,
                 userId
             };
 
-            fetch('http://localhost:3000/commitments', {
+            fetch('https://gestion-compromisos-backend.onrender.com/commitments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
@@ -107,7 +114,7 @@
         });
 
         function loadCommitments() {
-            fetch(`http://localhost:3000/commitments/${userId}`)
+            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${userId}`)
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
@@ -116,17 +123,12 @@
         }
 
         function loadAllCommitments() {
-            const password = prompt('Por favor, ingresa la contraseña para acceder a la vista de administrador:');
-            if (password === 'admin123') {
-                fetch('http://localhost:3000/admin/commitments')
-                    .then(response => response.json())
-                    .then(commitments => {
-                        commitmentList.innerHTML = '';
-                        commitments.forEach(commitment => addCommitmentToTable(commitment));
-                    });
-            } else {
-                alert('Contraseña incorrecta.');
-            }
+            fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+                .then(response => response.json())
+                .then(commitments => {
+                    commitmentList.innerHTML = '';
+                    commitments.forEach(commitment => addCommitmentToTable(commitment));
+                });
         }
 
         function addCommitmentToTable(commitment) {
@@ -138,11 +140,13 @@
                 <td>${commitment.leaderName}</td>
                 <td>${commitment.commitment}</td>
                 <td>${commitment.responsible}</td>
+                <td>${commitment.responsibleEmail}</td>
                 <td>${commitment.municipality}</td>
                 <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
+                    <button class="btn btn-primary btn-sm complete-button">Compromiso cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
@@ -150,10 +154,10 @@
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'teresa123') {
+                if (password === 'admin123') {
                     row.remove();
                 } else {
-                    alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
+                    alert('Contraseña incorrecta.');
                 }
             });
 
@@ -177,6 +181,6 @@
 
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
+
 </body>
 </html>
-
