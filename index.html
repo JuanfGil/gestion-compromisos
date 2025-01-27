@@ -58,6 +58,7 @@
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
+        // Generar o recuperar el userId único para cada dispositivo
         function getOrCreateUserId() {
             let userId = localStorage.getItem('userId');
             if (!userId) {
@@ -147,7 +148,7 @@
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'teresa123') {
                     row.remove();
-                    deleteCommitmentFromStorage(commitment.id);
+                    deleteCommitment(commitment.id);
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
                 }
@@ -157,6 +158,7 @@
             completeButton.addEventListener('click', () => {
                 const description = prompt('Por favor, escribe una descripción del cumplimiento:');
                 if (description) {
+                    updateCommitmentState(commitment.id, 'Cumplido', description);
                     row.cells[4].textContent = 'Cumplido';
                     row.cells[4].className = 'btn btn-info btn-sm status-button';
                     row.cells[5].textContent = description;
@@ -179,6 +181,32 @@
                 default:
                     return 'btn-secondary';
             }
+        }
+
+        function updateCommitmentState(id, state, observation) {
+            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state, observation })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Estado actualizado correctamente.');
+                } else {
+                    console.error('Error al actualizar el estado.');
+                }
+            });
+        }
+
+        function deleteCommitment(id) {
+            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${id}`, {
+                method: 'DELETE'
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Compromiso eliminado correctamente.');
+                } else {
+                    console.error('Error al eliminar el compromiso.');
+                }
+            });
         }
 
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
