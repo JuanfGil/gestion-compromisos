@@ -92,31 +92,13 @@
                 userId
             };
 
-            fetch('https://gestion-compromisos-backend.onrender.com/commitments', {
+            fetch('http://localhost:3000/commitments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
             }).then(response => {
                 if (response.ok) {
                     alert('Compromiso guardado correctamente.');
-
-                    // Enviar correo al guardar compromiso
-                    fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: 'juanfelipegilmora2024@gmail.com',
-                            subject: `Nuevo compromiso creado por ${leaderName}`,
-                            message: `Compromiso: ${commitment}\nResponsable: ${responsible}\nMunicipio: ${municipality}\nObservaciones: ${observation}`
-                        })
-                    }).then(emailResponse => {
-                        if (emailResponse.ok) {
-                            console.log('Correo enviado correctamente.');
-                        } else {
-                            console.error('Error al enviar el correo.');
-                        }
-                    });
-
                     loadCommitments();
                 } else {
                     alert('Error al guardar el compromiso.');
@@ -125,7 +107,7 @@
         });
 
         function loadCommitments() {
-            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${userId}`)
+            fetch(`http://localhost:3000/commitments/${userId}`)
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
@@ -134,16 +116,16 @@
         }
 
         function loadAllCommitments() {
-            const password = prompt('Por favor, ingresa la contraseña de administrador:');
+            const password = prompt('Por favor, ingresa la contraseña para acceder a la vista de administrador:');
             if (password === 'admin123') {
-                fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+                fetch('http://localhost:3000/admin/commitments')
                     .then(response => response.json())
                     .then(commitments => {
                         commitmentList.innerHTML = '';
                         commitments.forEach(commitment => addCommitmentToTable(commitment));
                     });
             } else {
-                alert('Contraseña incorrecta. No tienes permisos para acceder a esta vista.');
+                alert('Contraseña incorrecta.');
             }
         }
 
@@ -161,7 +143,6 @@
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
-                    <button class="btn btn-primary btn-sm complete-button">Compromiso cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
@@ -171,19 +152,8 @@
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'teresa123') {
                     row.remove();
-                    deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
-                }
-            });
-
-            const completeButton = row.querySelector('.complete-button');
-            completeButton.addEventListener('click', () => {
-                const description = prompt('Por favor, escribe una descripción del cumplimiento:');
-                if (description) {
-                    row.cells[4].textContent = 'Cumplido';
-                    row.cells[4].className = 'btn btn-info btn-sm status-button';
-                    row.cells[5].textContent = description;
                 }
             });
 
@@ -207,6 +177,6 @@
 
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
-
 </body>
 </html>
+
