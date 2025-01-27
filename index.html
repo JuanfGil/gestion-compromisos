@@ -97,12 +97,16 @@
                 </td>
             `;
 
-            updateStatus(row, creationDate);
+            if (commitment.state === 'Cumplido') {
+                row.cells[2].className = 'btn btn-info btn-sm status-button';
+            }
+
+            updateStatus(row, creationDate, commitment);
 
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'teresa123') {
+                if (password === 'tu-contraseña-segura') {
                     row.remove();
                     deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
@@ -115,7 +119,7 @@
                 const description = prompt('Por favor, escribe una descripción del cumplimiento:');
                 if (description) {
                     row.cells[2].textContent = 'Cumplido';
-                    row.cells[2].className = 'btn btn-info btn-sm';
+                    row.cells[2].className = 'btn btn-info btn-sm status-button';
                     row.cells[3].textContent = description;
 
                     const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
@@ -139,22 +143,28 @@
             commitmentList.appendChild(row);
         }
 
-        function updateStatus(row, creationDate) {
+        function updateStatus(row, creationDate, commitment) {
             const statusButton = row.querySelector('.status-button');
             const now = new Date();
             const timeDiff = Math.floor((now - creationDate) / (1000 * 60 * 60 * 24));
             const leaderName = row.cells[0].textContent;
-            const commitment = row.cells[1].textContent;
+            const commitmentText = row.cells[1].textContent;
             let currentStatus = statusButton.textContent;
+
+            if (commitment.state === 'Cumplido') {
+                statusButton.textContent = 'Cumplido';
+                statusButton.className = 'btn btn-info btn-sm status-button';
+                return;
+            }
 
             if (timeDiff > 30 && currentStatus !== 'Vencido') {
                 statusButton.textContent = 'Vencido';
                 statusButton.className = `btn btn-danger btn-sm status-button`;
-                sendEmailNotification('Vencido', leaderName, commitment);
+                sendEmailNotification('Vencido', leaderName, commitmentText);
             } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = `btn btn-warning btn-sm status-button`;
-                sendEmailNotification('Pendiente', leaderName, commitment);
+                sendEmailNotification('Pendiente', leaderName, commitmentText);
             } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
                 statusButton.className = `btn btn-success btn-sm status-button`;
@@ -209,7 +219,9 @@
             rows.forEach(row => {
                 const dateCell = row.cells[4].textContent;
                 const creationDate = new Date(dateCell);
-                updateStatus(row, creationDate);
+                const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+                const commitment = storedCommitments.find(c => c.creationDate === creationDate.toISOString());
+                if (commitment) updateStatus(row, creationDate, commitment);
             });
         }, 60000);
     </script>
