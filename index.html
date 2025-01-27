@@ -123,17 +123,21 @@
         }
 
         function loadAllCommitments() {
-            fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
-                .then(response => response.json())
-                .then(commitments => {
-                    commitmentList.innerHTML = '';
-                    commitments.forEach(commitment => addCommitmentToTable(commitment));
-                });
+            const password = prompt('Ingresa la contraseña de administrador:');
+            if (password === 'admin123') {
+                fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+                    .then(response => response.json())
+                    .then(commitments => {
+                        commitmentList.innerHTML = '';
+                        commitments.forEach(commitment => addCommitmentToTable(commitment));
+                    });
+            } else {
+                alert('Contraseña incorrecta.');
+            }
         }
 
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
-
             const creationDate = new Date(commitment.creationDate);
 
             row.innerHTML = `
@@ -155,9 +159,28 @@
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'admin123') {
-                    row.remove();
+                    fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${commitment.id}`, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (response.ok) {
+                            row.remove();
+                            alert('Compromiso eliminado correctamente.');
+                        } else {
+                            alert('Error al eliminar el compromiso.');
+                        }
+                    });
                 } else {
                     alert('Contraseña incorrecta.');
+                }
+            });
+
+            const completeButton = row.querySelector('.complete-button');
+            completeButton.addEventListener('click', () => {
+                const description = prompt('Por favor, escribe una descripción del cumplimiento:');
+                if (description) {
+                    row.cells[5].textContent = 'Cumplido';
+                    row.cells[5].className = 'btn btn-info btn-sm status-button';
+                    row.cells[6].textContent = description;
                 }
             });
 
@@ -181,6 +204,5 @@
 
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
-
 </body>
 </html>
