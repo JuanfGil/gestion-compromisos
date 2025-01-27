@@ -23,6 +23,10 @@
                 <input type="text" id="responsible" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="responsibleEmail" class="form-label">Correo del Responsable</label>
+                <input type="email" id="responsibleEmail" class="form-control" required>
+            </div>
+            <div class="mb-3">
                 <label for="municipality" class="form-label">Municipio</label>
                 <input type="text" id="municipality" class="form-control" required>
             </div>
@@ -41,6 +45,7 @@
                     <th>Nombre del Líder</th>
                     <th>Compromiso</th>
                     <th>Responsable</th>
+                    <th>Correo del Responsable</th>
                     <th>Municipio</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
@@ -55,7 +60,6 @@
     </div>
 
     <script>
-        const backendURL = 'https://gestion-compromisos-backend.onrender.com';
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
@@ -81,6 +85,7 @@
             const leaderName = document.getElementById('leaderName').value;
             const commitment = document.getElementById('commitment').value;
             const responsible = document.getElementById('responsible').value;
+            const responsibleEmail = document.getElementById('responsibleEmail').value;
             const municipality = document.getElementById('municipality').value;
             const observation = document.getElementById('observation').value;
 
@@ -88,33 +93,37 @@
                 leaderName,
                 commitment,
                 responsible,
+                responsibleEmail,
                 municipality,
                 observation,
                 userId
             };
 
-            fetch(`${backendURL}/commitments`, {
+            fetch('http://localhost:3000/commitments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
-            }).then(response => {
+            })
+            .then(response => {
                 if (response.ok) {
                     alert('Compromiso guardado correctamente.');
+                    form.reset();
                     loadCommitments();
                 } else {
-                    throw new Error('Error al guardar el compromiso.');
+                    response.text().then(text => alert(`Error: ${text}`));
                 }
-            }).catch(error => {
-                console.error(error);
-                alert('No se pudo guardar el compromiso. Inténtalo nuevamente.');
+            })
+            .catch(error => {
+                console.error('Error al guardar el compromiso:', error);
+                alert('Error al guardar el compromiso.');
             });
         });
 
         function loadCommitments() {
-            fetch(`${backendURL}/commitments/${userId}`)
+            fetch(`http://localhost:3000/commitments/${userId}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Error al obtener compromisos.');
+                        throw new Error('Error al cargar compromisos');
                     }
                     return response.json();
                 })
@@ -129,87 +138,82 @@
         }
 
         function loadAllCommitments() {
-            const password = prompt('Por favor, ingresa la contraseña para ver los compromisos de administrador:');
-            if (password !== 'admin123') {
-                alert('Contraseña incorrecta. No tienes acceso.');
-                return;
-            }
-
-            fetch(`${backendURL}/admin/commitments`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al obtener compromisos de administrador.');
-                    }
-                    return response.json();
-                })
+            fetch('http://localhost:3000/admin/commitments')
+                .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
                     commitments.forEach(commitment => addCommitmentToTable(commitment));
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('No se pudieron cargar los compromisos de administrador.');
                 });
         }
 
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
+
             const creationDate = new Date(commitment.creationDate);
 
             row.innerHTML = `
                 <td>${commitment.leaderName}</td>
                 <td>${commitment.commitment}</td>
                 <td>${commitment.responsible}</td>
+                <td>${commitment.responsibleEmail}</td>
                 <td>${commitment.municipality}</td>
-                <td><button class="btn btn-sm ${getStatusClass(commitment.state)}">${commitment.state}</button></td>
+                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
+                    <button class="btn btn-primary btn-sm complete-button">Compromiso cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
 
+            // Acciones de los botones
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'teresa123') {
-                    deleteCommitment(commitment.id, row);
+                if (password === 'admin123') {
+                    row.remove();
+                    deleteCommitmentFromStorage(commitment.id);
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
+                }
+            });
+
+            const completeButton = row.querySelector('.complete-button');
+            completeButton.addEventListener('click', () => {
+                const description = prompt('Por favor, escribe una descripción del cumplimiento:');
+                if (description) {
+                    row.cells[5].textContent = 'Cumplido';
+                    row.cells[5].className = 'btn btn-info btn-sm status-button';
+                    row.cells[6].textContent = description;
                 }
             });
 
             commitmentList.appendChild(row);
         }
 
-        function deleteCommitment(id, row) {
-            fetch(`${backendURL}/commitments/${id}`, {
-                method: 'DELETE',
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al eliminar el compromiso.');
-                    }
-                    row.remove();
-                    alert('Compromiso eliminado correctamente.');
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('No se pudo eliminar el compromiso.');
-                });
-        }
-
         function getStatusClass(status) {
             switch (status) {
-                case 'Vencido': return 'btn-danger';
-                case 'Pendiente': return 'btn-warning';
-                case 'Activo': return 'btn-success';
-                default: return 'btn-secondary';
+                case 'Vencido':
+                    return 'btn-danger';
+                case 'Pendiente':
+                    return 'btn-warning';
+                case 'Activo':
+                    return 'btn-success';
+                case 'Cumplido':
+                    return 'btn-info';
+                default:
+                    return 'btn-secondary';
             }
         }
 
-        document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
+        document.getElementById('adminViewButton').addEventListener('click', () => {
+            const password = prompt('Ingresa la contraseña para la vista de administrador:');
+            if (password === 'admin123') {
+                loadAllCommitments();
+            } else {
+                alert('Contraseña incorrecta.');
+            }
+        });
     </script>
-
 </body>
 </html>
