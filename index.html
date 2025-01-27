@@ -92,13 +92,31 @@
                 userId
             };
 
-            fetch('http://localhost:3000/commitments', {
+            fetch('https://gestion-compromisos-backend.onrender.com/commitments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
             }).then(response => {
                 if (response.ok) {
                     alert('Compromiso guardado correctamente.');
+
+                    // Enviar correo al guardar compromiso
+                    fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: 'juanfelipegilmora2024@gmail.com',
+                            subject: `Nuevo compromiso creado por ${leaderName}`,
+                            message: `Compromiso: ${commitment}\nResponsable: ${responsible}\nMunicipio: ${municipality}\nObservaciones: ${observation}`
+                        })
+                    }).then(emailResponse => {
+                        if (emailResponse.ok) {
+                            console.log('Correo enviado correctamente.');
+                        } else {
+                            console.error('Error al enviar el correo.');
+                        }
+                    });
+
                     loadCommitments();
                 } else {
                     alert('Error al guardar el compromiso.');
@@ -107,7 +125,7 @@
         });
 
         function loadCommitments() {
-            fetch(`http://localhost:3000/commitments/${userId}`)
+            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${userId}`)
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
@@ -116,12 +134,17 @@
         }
 
         function loadAllCommitments() {
-            fetch('http://localhost:3000/admin/commitments')
-                .then(response => response.json())
-                .then(commitments => {
-                    commitmentList.innerHTML = '';
-                    commitments.forEach(commitment => addCommitmentToTable(commitment));
-                });
+            const password = prompt('Por favor, ingresa la contraseña de administrador:');
+            if (password === 'admin123') {
+                fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+                    .then(response => response.json())
+                    .then(commitments => {
+                        commitmentList.innerHTML = '';
+                        commitments.forEach(commitment => addCommitmentToTable(commitment));
+                    });
+            } else {
+                alert('Contraseña incorrecta. No tienes permisos para acceder a esta vista.');
+            }
         }
 
         function addCommitmentToTable(commitment) {
@@ -134,7 +157,7 @@
                 <td>${commitment.commitment}</td>
                 <td>${commitment.responsible}</td>
                 <td>${commitment.municipality}</td>
-                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}" disabled>${commitment.state || 'Activo'}</button></td>
+                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
@@ -147,16 +170,8 @@
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'teresa123') {
-                    fetch(`http://localhost:3000/commitments/${commitment.id}`, {
-                        method: 'DELETE',
-                    }).then(response => {
-                        if (response.ok) {
-                            alert('Compromiso eliminado correctamente.');
-                            loadCommitments();
-                        } else {
-                            alert('Error al eliminar el compromiso.');
-                        }
-                    });
+                    row.remove();
+                    deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
                 }
@@ -166,18 +181,9 @@
             completeButton.addEventListener('click', () => {
                 const description = prompt('Por favor, escribe una descripción del cumplimiento:');
                 if (description) {
-                    fetch(`http://localhost:3000/commitments/${commitment.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ state: 'Cumplido', observation: description })
-                    }).then(response => {
-                        if (response.ok) {
-                            alert('Compromiso actualizado como cumplido.');
-                            loadCommitments();
-                        } else {
-                            alert('Error al actualizar el compromiso.');
-                        }
-                    });
+                    row.cells[4].textContent = 'Cumplido';
+                    row.cells[4].className = 'btn btn-info btn-sm status-button';
+                    row.cells[5].textContent = description;
                 }
             });
 
