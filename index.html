@@ -88,7 +88,7 @@
             row.innerHTML = `
                 <td>${commitment.leaderName}</td>
                 <td>${commitment.commitment}</td>
-                <td><button class="btn btn-sm status-button">${commitment.state || 'Activo'}</button></td>
+                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
@@ -102,7 +102,7 @@
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'tu-contraseña-segura') {
+                if (password === 'teresa123') {
                     row.remove();
                     deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
@@ -149,15 +149,30 @@
 
             if (timeDiff > 30 && currentStatus !== 'Vencido') {
                 statusButton.textContent = 'Vencido';
-                statusButton.className = 'btn btn-danger btn-sm status-button';
+                statusButton.className = `btn btn-danger btn-sm status-button`;
                 sendEmailNotification('Vencido', leaderName, commitment);
             } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
                 statusButton.textContent = 'Pendiente';
-                statusButton.className = 'btn btn-warning btn-sm status-button';
+                statusButton.className = `btn btn-warning btn-sm status-button`;
                 sendEmailNotification('Pendiente', leaderName, commitment);
             } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
-                statusButton.className = 'btn btn-success btn-sm status-button';
+                statusButton.className = `btn btn-success btn-sm status-button`;
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Vencido':
+                    return 'btn-danger';
+                case 'Pendiente':
+                    return 'btn-warning';
+                case 'Activo':
+                    return 'btn-success';
+                case 'Cumplido':
+                    return 'btn-info';
+                default:
+                    return 'btn-secondary';
             }
         }
 
