@@ -34,6 +34,7 @@
         </form>
 
         <h2 class="mt-5">Lista de Compromisos</h2>
+        <button id="adminViewButton" class="btn btn-secondary mb-3">Vista de Administrador</button>
         <table class="table table-bordered mt-3">
             <thead class="table-dark">
                 <tr>
@@ -57,9 +58,20 @@
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
+        // Generar o recuperar el userId único para cada dispositivo
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+                localStorage.setItem('userId', userId);
+            }
+            return userId;
+        }
+
+        const userId = getOrCreateUserId();
+
         document.addEventListener('DOMContentLoaded', () => {
-            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            storedCommitments.forEach(commitment => addCommitmentToTable(commitment));
+            loadCommitments();
         });
 
         form.addEventListener('submit', function(event) {
@@ -70,7 +82,6 @@
             const responsible = document.getElementById('responsible').value;
             const municipality = document.getElementById('municipality').value;
             const observation = document.getElementById('observation').value;
-            const creationDate = new Date();
 
             const newCommitment = {
                 leaderName,
@@ -78,21 +89,40 @@
                 responsible,
                 municipality,
                 observation,
-                creationDate: creationDate.toISOString(),
-                state: 'Activo'
+                userId
             };
 
-            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            storedCommitments.push(newCommitment);
-            localStorage.setItem('commitments', JSON.stringify(storedCommitments));
-
-            addCommitmentToTable(newCommitment);
-
-            // Enviar correo al guardar el compromiso
-            sendEmailNotification('Activo', leaderName, commitment);
-
-            form.reset();
+            fetch('https://gestion-compromisos-backend.onrender.com/commitments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newCommitment)
+            }).then(response => {
+                if (response.ok) {
+                    alert('Compromiso guardado correctamente.');
+                    loadCommitments();
+                } else {
+                    alert('Error al guardar el compromiso.');
+                }
+            });
         });
+
+        function loadCommitments() {
+            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${userId}`)
+                .then(response => response.json())
+                .then(commitments => {
+                    commitmentList.innerHTML = '';
+                    commitments.forEach(commitment => addCommitmentToTable(commitment));
+                });
+        }
+
+        function loadAllCommitments() {
+            fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+                .then(response => response.json())
+                .then(commitments => {
+                    commitmentList.innerHTML = '';
+                    commitments.forEach(commitment => addCommitmentToTable(commitment));
+                });
+        }
 
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
@@ -113,16 +143,10 @@
                 </td>
             `;
 
-            if (commitment.state === 'Cumplido') {
-                row.cells[4].className = 'btn btn-info btn-sm status-button';
-            }
-
-            updateStatus(row, creationDate, commitment);
-
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'tu-contraseña-segura') {
+                if (password === 'teresa123') {
                     row.remove();
                     deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
@@ -137,54 +161,10 @@
                     row.cells[4].textContent = 'Cumplido';
                     row.cells[4].className = 'btn btn-info btn-sm status-button';
                     row.cells[5].textContent = description;
-
-                    const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-                    const updatedCommitments = storedCommitments.map(c => {
-                        if (c.creationDate === commitment.creationDate) {
-                            return {
-                                ...c,
-                                state: 'Cumplido',
-                                observation: description
-                            };
-                        }
-                        return c;
-                    });
-
-                    localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
-                } else {
-                    alert('No se ha proporcionado una descripción del cumplimiento.');
                 }
             });
 
             commitmentList.appendChild(row);
-        }
-
-        function updateStatus(row, creationDate, commitment) {
-            const statusButton = row.querySelector('.status-button');
-            const now = new Date();
-            const timeDiff = Math.floor((now - creationDate) / (1000 * 60 * 60 * 24));
-            const leaderName = row.cells[0].textContent;
-            const commitmentText = row.cells[1].textContent;
-            let currentStatus = statusButton.textContent;
-
-            if (commitment.state === 'Cumplido') {
-                statusButton.textContent = 'Cumplido';
-                statusButton.className = 'btn btn-info btn-sm status-button';
-                return;
-            }
-
-            if (timeDiff > 30 && currentStatus !== 'Vencido') {
-                statusButton.textContent = 'Vencido';
-                statusButton.className = `btn btn-danger btn-sm status-button`;
-                sendEmailNotification('Vencido', leaderName, commitmentText);
-            } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
-                statusButton.textContent = 'Pendiente';
-                statusButton.className = `btn btn-warning btn-sm status-button`;
-                sendEmailNotification('Pendiente', leaderName, commitmentText);
-            } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
-                statusButton.textContent = 'Activo';
-                statusButton.className = `btn btn-success btn-sm status-button`;
-            }
         }
 
         function getStatusClass(status) {
@@ -202,44 +182,7 @@
             }
         }
 
-        function sendEmailNotification(status, leaderName, commitment) {
-            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com',
-                    subject: `Cambio de estado: ${status}`,
-                    message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
-                })
-            }).then(response => {
-                if (response.ok) {
-                    console.log(`Correo enviado para el estado ${status}`);
-                } else {
-                    console.error(`Error al enviar el correo para el estado ${status}`);
-                }
-            }).catch(error => {
-                console.error('Error en la solicitud de correo:', error);
-            });
-        }
-
-        function deleteCommitmentFromStorage(creationDate) {
-            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            const updatedCommitments = storedCommitments.filter(c => c.creationDate !== creationDate);
-            localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
-        }
-
-        setInterval(() => {
-            const rows = commitmentList.querySelectorAll('tr');
-            rows.forEach(row => {
-                const dateCell = row.cells[6].textContent;
-                const creationDate = new Date(dateCell);
-                const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-                const commitment = storedCommitments.find(c => c.creationDate === creationDate.toISOString());
-                if (commitment) updateStatus(row, creationDate, commitment);
-            });
-        }, 60000);
+        document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
 
 </body>
