@@ -19,6 +19,14 @@
                 <textarea id="commitment" class="form-control" rows="3" required></textarea>
             </div>
             <div class="mb-3">
+                <label for="responsible" class="form-label">Responsable</label>
+                <input type="text" id="responsible" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="municipality" class="form-label">Municipio</label>
+                <input type="text" id="municipality" class="form-control" required>
+            </div>
+            <div class="mb-3">
                 <label for="observation" class="form-label">Observaciones</label>
                 <textarea id="observation" class="form-control" rows="3"></textarea>
             </div>
@@ -31,6 +39,8 @@
                 <tr>
                     <th>Nombre del Líder</th>
                     <th>Compromiso</th>
+                    <th>Responsable</th>
+                    <th>Municipio</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
                     <th>Fecha de Creación</th>
@@ -57,12 +67,16 @@
 
             const leaderName = document.getElementById('leaderName').value;
             const commitment = document.getElementById('commitment').value;
+            const responsible = document.getElementById('responsible').value;
+            const municipality = document.getElementById('municipality').value;
             const observation = document.getElementById('observation').value;
             const creationDate = new Date();
 
             const newCommitment = {
                 leaderName,
                 commitment,
+                responsible,
+                municipality,
                 observation,
                 creationDate: creationDate.toISOString(),
                 state: 'Activo'
@@ -88,6 +102,8 @@
             row.innerHTML = `
                 <td>${commitment.leaderName}</td>
                 <td>${commitment.commitment}</td>
+                <td>${commitment.responsible}</td>
+                <td>${commitment.municipality}</td>
                 <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
@@ -98,7 +114,7 @@
             `;
 
             if (commitment.state === 'Cumplido') {
-                row.cells[2].className = 'btn btn-info btn-sm status-button';
+                row.cells[4].className = 'btn btn-info btn-sm status-button';
             }
 
             updateStatus(row, creationDate, commitment);
@@ -118,9 +134,9 @@
             completeButton.addEventListener('click', () => {
                 const description = prompt('Por favor, escribe una descripción del cumplimiento:');
                 if (description) {
-                    row.cells[2].textContent = 'Cumplido';
-                    row.cells[2].className = 'btn btn-info btn-sm status-button';
-                    row.cells[3].textContent = description;
+                    row.cells[4].textContent = 'Cumplido';
+                    row.cells[4].className = 'btn btn-info btn-sm status-button';
+                    row.cells[5].textContent = description;
 
                     const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
                     const updatedCommitments = storedCommitments.map(c => {
@@ -217,7 +233,7 @@
         setInterval(() => {
             const rows = commitmentList.querySelectorAll('tr');
             rows.forEach(row => {
-                const dateCell = row.cells[4].textContent;
+                const dateCell = row.cells[6].textContent;
                 const creationDate = new Date(dateCell);
                 const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
                 const commitment = storedCommitments.find(c => c.creationDate === creationDate.toISOString());
