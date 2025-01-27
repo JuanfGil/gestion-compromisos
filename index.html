@@ -74,6 +74,9 @@
 
             addCommitmentToTable(newCommitment);
 
+            // Enviar correo al guardar el compromiso
+            sendEmailNotification('Activo', leaderName, commitment);
+
             form.reset();
         });
 
@@ -99,7 +102,7 @@
             const deleteButton = row.querySelector('.delete-button');
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-                if (password === 'teresa123') {
+                if (password === 'tu-contraseña-segura') {
                     row.remove();
                     deleteCommitmentFromStorage(commitment.creationDate);
                 } else {
@@ -116,15 +119,15 @@
                     row.cells[3].textContent = description;
 
                     const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-                    const updatedCommitments = storedCommitments.map(commitment => {
-                        if (commitment.creationDate === row.cells[4].textContent) {
+                    const updatedCommitments = storedCommitments.map(c => {
+                        if (c.creationDate === commitment.creationDate) {
                             return {
-                                ...commitment,
+                                ...c,
                                 state: 'Cumplido',
                                 observation: description
                             };
                         }
-                        return commitment;
+                        return c;
                     });
 
                     localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
@@ -147,18 +150,42 @@
             if (timeDiff > 30 && currentStatus !== 'Vencido') {
                 statusButton.textContent = 'Vencido';
                 statusButton.className = 'btn btn-danger btn-sm status-button';
+                sendEmailNotification('Vencido', leaderName, commitment);
             } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = 'btn btn-warning btn-sm status-button';
+                sendEmailNotification('Pendiente', leaderName, commitment);
             } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
                 statusButton.className = 'btn btn-success btn-sm status-button';
             }
         }
 
+        function sendEmailNotification(status, leaderName, commitment) {
+            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: 'juanfelipegilmora2024@gmail.com',
+                    subject: `Cambio de estado: ${status}`,
+                    message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
+                })
+            }).then(response => {
+                if (response.ok) {
+                    console.log(`Correo enviado para el estado ${status}`);
+                } else {
+                    console.error(`Error al enviar el correo para el estado ${status}`);
+                }
+            }).catch(error => {
+                console.error('Error en la solicitud de correo:', error);
+            });
+        }
+
         function deleteCommitmentFromStorage(creationDate) {
             const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            const updatedCommitments = storedCommitments.filter(commitment => commitment.creationDate !== creationDate);
+            const updatedCommitments = storedCommitments.filter(c => c.creationDate !== creationDate);
             localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
         }
 
