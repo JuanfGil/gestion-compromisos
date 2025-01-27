@@ -92,7 +92,7 @@
                 userId
             };
 
-            fetch('https://gestion-compromisos-backend.onrender.com/commitments', {
+            fetch('http://localhost:3000/commitments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
@@ -107,7 +107,7 @@
         });
 
         function loadCommitments() {
-            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${userId}`)
+            fetch(`http://localhost:3000/commitments/${userId}`)
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
@@ -116,7 +116,7 @@
         }
 
         function loadAllCommitments() {
-            fetch('https://gestion-compromisos-backend.onrender.com/admin/commitments')
+            fetch('http://localhost:3000/admin/commitments')
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
@@ -134,7 +134,7 @@
                 <td>${commitment.commitment}</td>
                 <td>${commitment.responsible}</td>
                 <td>${commitment.municipality}</td>
-                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</button></td>
+                <td><button class="btn btn-sm status-button ${getStatusClass(commitment.state || 'Activo')}" disabled>${commitment.state || 'Activo'}</button></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
@@ -147,8 +147,16 @@
             deleteButton.addEventListener('click', () => {
                 const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
                 if (password === 'teresa123') {
-                    row.remove();
-                    deleteCommitment(commitment.id);
+                    fetch(`http://localhost:3000/commitments/${commitment.id}`, {
+                        method: 'DELETE',
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Compromiso eliminado correctamente.');
+                            loadCommitments();
+                        } else {
+                            alert('Error al eliminar el compromiso.');
+                        }
+                    });
                 } else {
                     alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
                 }
@@ -158,10 +166,18 @@
             completeButton.addEventListener('click', () => {
                 const description = prompt('Por favor, escribe una descripción del cumplimiento:');
                 if (description) {
-                    updateCommitmentState(commitment.id, 'Cumplido', description);
-                    row.cells[4].textContent = 'Cumplido';
-                    row.cells[4].className = 'btn btn-info btn-sm status-button';
-                    row.cells[5].textContent = description;
+                    fetch(`http://localhost:3000/commitments/${commitment.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ state: 'Cumplido', observation: description })
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Compromiso actualizado como cumplido.');
+                            loadCommitments();
+                        } else {
+                            alert('Error al actualizar el compromiso.');
+                        }
+                    });
                 }
             });
 
@@ -183,33 +199,8 @@
             }
         }
 
-        function updateCommitmentState(id, state, observation) {
-            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ state, observation })
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Estado actualizado correctamente.');
-                } else {
-                    console.error('Error al actualizar el estado.');
-                }
-            });
-        }
-
-        function deleteCommitment(id) {
-            fetch(`https://gestion-compromisos-backend.onrender.com/commitments/${id}`, {
-                method: 'DELETE'
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Compromiso eliminado correctamente.');
-                } else {
-                    console.error('Error al eliminar el compromiso.');
-                }
-            });
-        }
-
         document.getElementById('adminViewButton').addEventListener('click', loadAllCommitments);
     </script>
+
 </body>
 </html>
