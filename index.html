@@ -64,7 +64,8 @@
                 leaderName,
                 commitment,
                 observation,
-                creationDate: creationDate.toISOString()
+                creationDate: creationDate.toISOString(),
+                state: 'Activo'
             };
 
             const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
@@ -73,96 +74,67 @@
 
             addCommitmentToTable(newCommitment);
 
-            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com',
-                    subject: `Nuevo compromiso activo`,
-                    message: `Se ha creado un nuevo compromiso para el líder ${leaderName}. Compromiso: ${commitment}. Estado: Activo.`
-                })
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Correo enviado correctamente.');
-                } else {
-                    console.error('Error al enviar el correo.');
-                }
-            }).catch(error => {
-                console.error('Error en la solicitud de correo:', error);
-            });
-
             form.reset();
         });
 
         function addCommitmentToTable(commitment) {
-    const row = document.createElement('tr');
-    const creationDate = new Date(commitment.creationDate);
+            const row = document.createElement('tr');
 
-    row.innerHTML = `
-        <td>${commitment.leaderName}</td>
-        <td>${commitment.commitment}</td>
-        <td><button class="btn btn-sm status-button">${commitment.state || 'Activo'}</button></td>
-        <td>${commitment.observation || ''}</td>
-        <td>${creationDate.toLocaleDateString()}</td>
-        <td>
-            <button class="btn btn-primary btn-sm complete-button">Compromiso cumplido</button>
-            <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
-        </td>
-    `;
+            const creationDate = new Date(commitment.creationDate);
 
-    // Ajustar el estilo según el estado
-    const statusButton = row.querySelector('.status-button');
-    if (commitment.state === 'Cumplido') {
-        statusButton.className = 'btn btn-info btn-sm';
-    }
+            row.innerHTML = `
+                <td>${commitment.leaderName}</td>
+                <td>${commitment.commitment}</td>
+                <td><button class="btn btn-sm status-button">${commitment.state || 'Activo'}</button></td>
+                <td>${commitment.observation || ''}</td>
+                <td>${creationDate.toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm complete-button">Compromiso cumplido</button>
+                    <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
+                </td>
+            `;
 
-    commitmentList.appendChild(row);
+            updateStatus(row, creationDate);
 
-    // Agregar funcionalidad para botones "Eliminar" y "Compromiso cumplido"
-    const deleteButton = row.querySelector('.delete-button');
-    deleteButton.addEventListener('click', () => {
-        const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
-        if (password === 'teresa123') {
-            row.remove();
-        } else {
-            alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
-        }
-    });
-
-    const completeButton = row.querySelector('.complete-button');
-    completeButton.addEventListener('click', () => {
-        const description = prompt('Por favor, escribe una descripción del cumplimiento:');
-        if (description) {
-            row.cells[2].textContent = 'Cumplido';
-            row.cells[2].className = 'btn btn-info btn-sm';
-            row.cells[3].textContent = description;
-
-            const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
-            const updatedCommitments = storedCommitments.map(commitment => {
-                if (commitment.creationDate === row.cells[4].textContent) {
-                    return {
-                        ...commitment,
-                        state: 'Cumplido',
-                        observation: description
-                    };
+            const deleteButton = row.querySelector('.delete-button');
+            deleteButton.addEventListener('click', () => {
+                const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
+                if (password === 'teresa123') {
+                    row.remove();
+                    deleteCommitmentFromStorage(commitment.creationDate);
+                } else {
+                    alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
                 }
-                return commitment;
             });
 
-            localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
-        } else {
-            alert('No se ha proporcionado una descripción del cumplimiento.');
+            const completeButton = row.querySelector('.complete-button');
+            completeButton.addEventListener('click', () => {
+                const description = prompt('Por favor, escribe una descripción del cumplimiento:');
+                if (description) {
+                    row.cells[2].textContent = 'Cumplido';
+                    row.cells[2].className = 'btn btn-info btn-sm';
+                    row.cells[3].textContent = description;
+
+                    const storedCommitments = JSON.parse(localStorage.getItem('commitments')) || [];
+                    const updatedCommitments = storedCommitments.map(commitment => {
+                        if (commitment.creationDate === row.cells[4].textContent) {
+                            return {
+                                ...commitment,
+                                state: 'Cumplido',
+                                observation: description
+                            };
+                        }
+                        return commitment;
+                    });
+
+                    localStorage.setItem('commitments', JSON.stringify(updatedCommitments));
+                } else {
+                    alert('No se ha proporcionado una descripción del cumplimiento.');
+                }
+            });
+
+            commitmentList.appendChild(row);
         }
-    });
-}
-
-
-    commitmentList.appendChild(row);
-}
-
-
 
         function updateStatus(row, creationDate) {
             const statusButton = row.querySelector('.status-button');
@@ -175,39 +147,13 @@
             if (timeDiff > 30 && currentStatus !== 'Vencido') {
                 statusButton.textContent = 'Vencido';
                 statusButton.className = 'btn btn-danger btn-sm status-button';
-
-                sendEmailNotification('Vencido', leaderName, commitment);
             } else if (timeDiff > 15 && currentStatus !== 'Pendiente') {
                 statusButton.textContent = 'Pendiente';
                 statusButton.className = 'btn btn-warning btn-sm status-button';
-
-                sendEmailNotification('Pendiente', leaderName, commitment);
             } else if (timeDiff <= 15 && currentStatus !== 'Activo') {
                 statusButton.textContent = 'Activo';
                 statusButton.className = 'btn btn-success btn-sm status-button';
             }
-        }
-
-        function sendEmailNotification(status, leaderName, commitment) {
-            fetch('https://gestion-compromisos-backend.onrender.com/send-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: 'juanfelipegilmora2024@gmail.com',
-                    subject: `Cambio de estado: ${status}`,
-                    message: `El compromiso para el líder ${leaderName} ha cambiado a estado ${status}. Compromiso: ${commitment}.`
-                })
-            }).then(response => {
-                if (response.ok) {
-                    console.log(`Correo enviado para el estado ${status}`);
-                } else {
-                    console.error(`Error al enviar el correo para el estado ${status}`);
-                }
-            }).catch(error => {
-                console.error('Error en la solicitud de correo:', error);
-            });
         }
 
         function deleteCommitmentFromStorage(creationDate) {
