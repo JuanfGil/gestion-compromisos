@@ -146,7 +146,7 @@
                 <td>${commitment.municipality || ''}</td>
                 <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
                 <td>${commitment.observation || ''}</td>
-                <td>${creationDate.toLocaleDateString()}</td>
+                <td>${!isNaN(creationDate) ? creationDate.toLocaleDateString() : 'Fecha Inválida'}</td>
                 <td>
                     <button class="btn btn-info btn-sm complete-button">Marcar Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
