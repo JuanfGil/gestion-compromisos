@@ -142,7 +142,7 @@
                 <td>${commitment.leaderName}</td>
                 <td>${commitment.commitment}</td>
                 <td>${commitment.responsible}</td>
-                <td>${commitment.responsibleEmail}</td>
+                <td>${commitment.responsibleEmail || ''}</td>
                 <td>${commitment.municipality}</td>
                 <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
                 <td>${commitment.observation || ''}</td>
