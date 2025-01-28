@@ -139,11 +139,11 @@
             const creationDate = new Date(commitment.creationDate);
 
             row.innerHTML = `
-                <td>${commitment.leaderName}</td>
-                <td>${commitment.commitment}</td>
-                <td>${commitment.responsible}</td>
+                <td>${commitment.leaderName || ''}</td>
+                <td>${commitment.commitment || ''}</td>
+                <td>${commitment.responsible || ''}</td>
                 <td>${commitment.responsibleEmail || ''}</td>
-                <td>${commitment.municipality}</td>
+                <td>${commitment.municipality || ''}</td>
                 <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${creationDate.toLocaleDateString()}</td>
@@ -159,12 +159,16 @@
                 if (password === 'admin123') {
                     fetch(`${API_URL}/commitments/${commitment.id}`, {
                         method: 'DELETE'
-                    }).then(() => {
-                        alert('Compromiso eliminado correctamente.');
-                        row.remove();
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Compromiso eliminado correctamente.');
+                            row.remove();
+                        } else {
+                            alert('Error al eliminar el compromiso.');
+                        }
                     });
                 } else {
-                    alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
+                    alert('Contraseña incorrecta.');
                 }
             });
 
@@ -174,9 +178,13 @@
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ state: 'Cumplido' })
-                }).then(() => {
-                    alert('Estado actualizado a "Cumplido".');
-                    loadCommitments();
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Compromiso marcado como cumplido.');
+                        loadCommitments();
+                    } else {
+                        alert('Error al actualizar el estado del compromiso.');
+                    }
                 });
             });
 
