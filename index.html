@@ -60,7 +60,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://gestion-compromisos-db.onrender.com'; // URL del servidor desplegado en Render
+        const API_URL = 'https://gestion-compromisos-db.onrender.com'; // URL del servidor
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
@@ -149,8 +149,36 @@
                 <td>${creationDate.toLocaleDateString()}</td>
                 <td>
                     <button class="btn btn-info btn-sm complete-button">Marcar Cumplido</button>
+                    <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
+
+            const deleteButton = row.querySelector('.delete-button');
+            deleteButton.addEventListener('click', () => {
+                const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
+                if (password === 'admin123') {
+                    fetch(`${API_URL}/commitments/${commitment.id}`, {
+                        method: 'DELETE'
+                    }).then(() => {
+                        alert('Compromiso eliminado correctamente.');
+                        row.remove();
+                    });
+                } else {
+                    alert('Contraseña incorrecta. No tienes permisos para eliminar este compromiso.');
+                }
+            });
+
+            const completeButton = row.querySelector('.complete-button');
+            completeButton.addEventListener('click', () => {
+                fetch(`${API_URL}/commitments/${commitment.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: 'Cumplido' })
+                }).then(() => {
+                    alert('Estado actualizado a "Cumplido".');
+                    loadCommitments();
+                });
+            });
 
             commitmentList.appendChild(row);
         }
