@@ -115,8 +115,23 @@
             alert('Error al guardar el compromiso. Verifica la conexión y los datos.');
         });
     });
+    
 
-    // Cargar compromisos del usuario
+    // Agregar funcionalidad a "Compromiso Cumplido"
+        row.querySelector('.complete-button').addEventListener('click', () => {
+            const observation = prompt('Describe cómo se cumplió este compromiso:');
+            if (observation) {
+                fetch(`${API_URL}/commitments/${commitment.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: 'Cumplido', observation })
+                }).then(() => loadCommitments());
+            }
+        });
+
+        document.getElementById('commitmentList').appendChild(row);
+    }
+       // Cargar compromisos del usuario
     function loadCommitments() {
         fetch(`${API_URL}/commitments/${userId}`)
             .then(response => {
