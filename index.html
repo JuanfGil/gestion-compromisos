@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Compromisos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        /* Colores personalizados para los estados */
+        .estado-activo {
+            color: white;
+            background-color: green;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .estado-pendiente {
+            color: black;
+            background-color: yellow;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .estado-vencido {
+            color: white;
+            background-color: red;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .estado-cumplido {
+            color: white;
+            background-color: blue;
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -160,6 +187,17 @@
             }
         });
 
+        // Asignar colores a los estados
+        function getStateClass(state) {
+            switch (state) {
+                case 'Activo': return 'estado-activo';
+                case 'Pendiente': return 'estado-pendiente';
+                case 'Vencido': return 'estado-vencido';
+                case 'Cumplido': return 'estado-cumplido';
+                default: return '';
+            }
+        }
+
         // Agregar compromiso a la tabla
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
@@ -170,7 +208,7 @@
                 <td>${commitment.responsible || 'N/A'}</td>
                 <td>${commitment.responsibleEmail || 'N/A'}</td>
                 <td>${commitment.municipality || 'N/A'}</td>
-                <td>${commitment.state || 'Activo'}</td>
+                <td><span class="${getStateClass(commitment.state)}">${commitment.state || 'N/A'}</span></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${new Date(commitment.creationDate).toLocaleDateString()}</td>
                 <td>
