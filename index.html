@@ -60,126 +60,111 @@
     </div>
 
     <script>
-        const API_URL = 'https://gestion-compromisos-db.onrender.com'; 
-        const form = document.getElementById('commitmentForm');
-        const commitmentList = document.getElementById('commitmentList');
+    const API_URL = 'https://gestion-compromisos-db.onrender.com';
+    const form = document.getElementById('commitmentForm');
+    const commitmentList = document.getElementById('commitmentList');
 
-        function getOrCreateUserId() {
-            let userId = localStorage.getItem('userId');
-            if (!userId) {
-                userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-                localStorage.setItem('userId', userId);
-            }
-            return userId;
+    function getOrCreateUserId() {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+            localStorage.setItem('userId', userId);
         }
+        return userId;
+    }
 
-        const userId = getOrCreateUserId();
+    const userId = getOrCreateUserId();
 
-        document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCommitments();
+    });
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const newCommitment = {
+            leaderName: document.getElementById('leaderName').value,
+            commitment: document.getElementById('commitment').value,
+            responsible: document.getElementById('responsible').value,
+            responsibleEmail: document.getElementById('responsibleEmail').value,
+            municipality: document.getElementById('municipality').value,
+            observation: document.getElementById('observation').value,
+            creationDate: new Date().toISOString(),
+            userId
+        };
+
+        fetch(`${API_URL}/commitments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newCommitment)
+        })
+        .then(response => response.json())
+        .then(() => {
+            alert('Compromiso guardado correctamente.');
             loadCommitments();
-        });
+        })
+        .catch(() => alert('Error al guardar el compromiso.'));
+    });
 
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const newCommitment = {
-                leaderName: document.getElementById('leaderName').value,
-                commitment: document.getElementById('commitment').value,
-                responsible: document.getElementById('responsible').value,
-                responsibleEmail: document.getElementById('responsibleEmail').value,
-                municipality: document.getElementById('municipality').value,
-                observation: document.getElementById('observation').value,
-                creationDate: new Date().toISOString(),
-                userId
-            };
-
-            fetch(`${API_URL}/commitments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newCommitment)
-            })
+    function loadCommitments() {
+        fetch(`${API_URL}/commitments/${userId}`)
             .then(response => response.json())
-            .then(() => {
-                alert('Compromiso guardado correctamente.');
-                loadCommitments();
+            .then(commitments => {
+                commitmentList.innerHTML = '';
+                commitments.forEach(addCommitmentToTable);
             })
-            .catch(() => alert('Error al guardar el compromiso.'));
-        });
+            .catch(() => alert('No se pudieron cargar los compromisos.'));
+    }
 
-        function loadCommitments() {
-            fetch(`${API_URL}/commitments/${userId}`)
-                .then(response => response.json())
-                .then(commitments => {
-                    commitmentList.innerHTML = '';
-                    commitments.forEach(addCommitmentToTable);
-                })
-                .catch(() => alert('No se pudieron cargar los compromisos.'));
-        }
+    function addCommitmentToTable(commitment) {
+        const row = document.createElement('tr');
+        const creationDate = commitment.creationDate ? new Date(commitment.creationDate).toLocaleDateString() : 'Fecha Inválida';
 
-        function addCommitmentToTable(commitment) {
-            const row = document.createElement('tr');
-            const creationDate = commitment.creationDate ? new Date(commitment.creationDate).toLocaleDateString() : 'Fecha Inválida';
+        row.innerHTML = `
+            <td>${commitment.leaderName || 'N/A'}</td>
+            <td>${commitment.commitment || 'N/A'}</td>
+            <td>${commitment.responsible || 'N/A'}</td>
+            <td>${commitment.responsibleEmail || 'N/A'}</td>
+            <td>${commitment.municipality || 'N/A'}</td>
+            <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
+            <td>${commitment.observation || 'N/A'}</td>
+            <td>${creationDate}</td>
+            <td>
+                <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
+            </td>
+        `;
 
-            row.innerHTML = `
-                <td>${commitment.leaderName || 'N/A'}</td>
-                <td>${commitment.commitment || 'N/A'}</td>
-                <td>${commitment.responsible || 'N/A'}</td>
-                <td>${commitment.responsibleEmail || 'N/A'}</td>
-                <td>${commitment.municipality || 'N/A'}</td>
-                <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
-                <td>${commitment.observation || 'N/A'}</td>
-                <td>${creationDate}</td>
-                <td>
-                    <button class="btn btn-info btn-sm complete-button">Marcar Cumplido</button>
-                    <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
-                </td>
-            `;
-
-            row.querySelector('.delete-button').addEventListener('click', () => {
-                const password = prompt('Ingrese la contraseña para eliminar:');
-                if (password === 'admin123') {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, { method: 'DELETE' })
-                        .then(() => {
-                            alert('Compromiso eliminado.');
-                            loadCommitments();
-                        })
-                        .catch(() => alert('Error al eliminar.'));
-                } else {
-                    alert('Contraseña incorrecta.');
-                }
-            });
-
-            row.querySelector('.complete-button').addEventListener('click', () => {
-                const description = prompt('Describa cómo se cumplió este compromiso:');
-                if (description) {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ state: 'Cumplido', observation: description })
-                    })
-                    .then(() => {
-                        alert('Compromiso marcado como cumplido.');
-                        loadCommitments();
-                    })
-                    .catch(() => alert('Error al actualizar compromiso.'));
-                }
-            });
-
-            commitmentList.appendChild(row);
-        }
-
-        function getStateClass(state) {
-            return { 'Vencido': 'danger', 'Pendiente': 'warning', 'Activo': 'success', 'Cumplido': 'primary' }[state] || 'secondary';
-        }
-
-        document.getElementById('adminViewButton').addEventListener('click', () => {
-            const password = prompt('Ingrese la contraseña de administrador:');
+        row.querySelector('.delete-button').addEventListener('click', () => {
+            const password = prompt('Ingrese la contraseña para eliminar:');
             if (password === 'admin123') {
-                loadCommitments();
+                fetch(`${API_URL}/commitments/${commitment.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: 'admin123' }) // Ahora la contraseña se envía correctamente en el body
+                })
+                .then(() => {
+                    alert('Compromiso eliminado.');
+                    loadCommitments();
+                })
+                .catch(() => alert('Error al eliminar.'));
             } else {
                 alert('Contraseña incorrecta.');
             }
         });
-    </script>
-</body>
-</html>
+
+        commitmentList.appendChild(row);
+    }
+
+    function getStateClass(state) {
+        return { 'Vencido': 'danger', 'Pendiente': 'warning', 'Activo': 'success', 'Cumplido': 'primary' }[state] || 'secondary';
+    }
+
+    document.getElementById('adminViewButton').addEventListener('click', () => {
+        const password = prompt('Ingrese la contraseña de administrador:');
+        if (password === 'admin123') {
+            loadCommitments();
+        } else {
+            alert('Contraseña incorrecta.');
+        }
+    });
+</script>
