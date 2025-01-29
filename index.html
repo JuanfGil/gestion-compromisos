@@ -53,17 +53,33 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody id="commitmentList"></tbody>
+            <tbody id="commitmentList">
+                <!-- Aquí se agregarán dinámicamente los compromisos -->
+            </tbody>
         </table>
     </div>
 
     <script>
-        const API_URL = 'https://gestion-compromisos-db.onrender.com'; // Verifica que sea correcto.
-
+        const API_URL = 'https://gestion-compromisos-db.onrender.com'; 
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
-        form.addEventListener('submit', function (event) {
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+                localStorage.setItem('userId', userId);
+            }
+            return userId;
+        }
+
+        const userId = getOrCreateUserId();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCommitments();
+        });
+
+        form.addEventListener('submit', function(event) {
             event.preventDefault();
 
             const newCommitment = {
@@ -73,112 +89,97 @@
                 responsibleEmail: document.getElementById('responsibleEmail').value,
                 municipality: document.getElementById('municipality').value,
                 observation: document.getElementById('observation').value,
-                creationDate: new Date().toISOString()
+                creationDate: new Date().toISOString(),
+                userId
             };
 
             fetch(`${API_URL}/commitments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
-            }).then((response) => {
-                if (!response.ok) {
-                    throw new Error('No se pudo guardar el compromiso.');
-                }
-                return response.json();
-            }).then(() => {
+            })
+            .then(response => response.json())
+            .then(() => {
                 alert('Compromiso guardado correctamente.');
                 loadCommitments();
-            }).catch((error) => {
-                console.error('Error al guardar el compromiso:', error);
-                alert('Error al guardar el compromiso.');
-            });
+            })
+            .catch(() => alert('Error al guardar el compromiso.'));
         });
 
         function loadCommitments() {
-            fetch(`${API_URL}/commitments`)
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('No se pudieron cargar los compromisos.');
-                    }
-                    return response.json();
-                })
-                .then((commitments) => {
+            fetch(`${API_URL}/commitments/${userId}`)
+                .then(response => response.json())
+                .then(commitments => {
                     commitmentList.innerHTML = '';
                     commitments.forEach(addCommitmentToTable);
                 })
-                .catch((error) => {
-                    console.error('Error al cargar los compromisos:', error);
-                    alert('No se pudieron cargar los compromisos.');
-                });
+                .catch(() => alert('No se pudieron cargar los compromisos.'));
         }
 
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
+            const creationDate = commitment.creationDate ? new Date(commitment.creationDate).toLocaleDateString() : 'Fecha Inválida';
+
             row.innerHTML = `
                 <td>${commitment.leaderName || 'N/A'}</td>
                 <td>${commitment.commitment || 'N/A'}</td>
                 <td>${commitment.responsible || 'N/A'}</td>
                 <td>${commitment.responsibleEmail || 'N/A'}</td>
                 <td>${commitment.municipality || 'N/A'}</td>
-                <td>${commitment.state || 'Activo'}</td>
+                <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
                 <td>${commitment.observation || 'N/A'}</td>
-                <td>${new Date(commitment.creationDate).toLocaleDateString()}</td>
+                <td>${creationDate}</td>
                 <td>
-                    <button class="btn btn-danger btn-sm delete-button" data-id="${commitment.id}">Eliminar</button>
+                    <button class="btn btn-info btn-sm complete-button">Marcar Cumplido</button>
+                    <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
 
             row.querySelector('.delete-button').addEventListener('click', () => {
                 const password = prompt('Ingrese la contraseña para eliminar:');
                 if (password === 'admin123') {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: 'admin123' })
-                    }).then((response) => {
-                        if (!response.ok) {
-                            throw new Error('No se pudo eliminar el compromiso.');
-                        }
-                        return response.json();
-                    }).then(() => {
-                        alert('Compromiso eliminado.');
-                        loadCommitments();
-                    }).catch((error) => {
-                        console.error('Error al eliminar el compromiso:', error);
-                        alert('Error al eliminar el compromiso.');
-                    });
+                    fetch(`${API_URL}/commitments/${commitment.id}`, { method: 'DELETE' })
+                        .then(() => {
+                            alert('Compromiso eliminado.');
+                            loadCommitments();
+                        })
+                        .catch(() => alert('Error al eliminar.'));
                 } else {
                     alert('Contraseña incorrecta.');
+                }
+            });
+
+            row.querySelector('.complete-button').addEventListener('click', () => {
+                const description = prompt('Describa cómo se cumplió este compromiso:');
+                if (description) {
+                    fetch(`${API_URL}/commitments/${commitment.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ state: 'Cumplido', observation: description })
+                    })
+                    .then(() => {
+                        alert('Compromiso marcado como cumplido.');
+                        loadCommitments();
+                    })
+                    .catch(() => alert('Error al actualizar compromiso.'));
                 }
             });
 
             commitmentList.appendChild(row);
         }
 
+        function getStateClass(state) {
+            return { 'Vencido': 'danger', 'Pendiente': 'warning', 'Activo': 'success', 'Cumplido': 'primary' }[state] || 'secondary';
+        }
+
         document.getElementById('adminViewButton').addEventListener('click', () => {
             const password = prompt('Ingrese la contraseña de administrador:');
             if (password === 'admin123') {
-                fetch(`${API_URL}/admin/commitments`)
-                    .then((response) => {
-                        if (!response.ok) {
-                            throw new Error('No se pudieron cargar los compromisos de administrador.');
-                        }
-                        return response.json();
-                    })
-                    .then((commitments) => {
-                        commitmentList.innerHTML = '';
-                        commitments.forEach(addCommitmentToTable);
-                    })
-                    .catch((error) => {
-                        console.error('Error al cargar compromisos de administrador:', error);
-                        alert('Error al cargar los compromisos de administrador.');
-                    });
+                loadCommitments();
             } else {
                 alert('Contraseña incorrecta.');
             }
         });
-
-        document.addEventListener('DOMContentLoaded', loadCommitments);
     </script>
 </body>
 </html>
