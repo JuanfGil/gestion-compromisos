@@ -58,11 +58,12 @@
     </div>
 
     <script>
-        const API_URL = 'https://gestion-compromisos-db.onrender.com';
+        const API_URL = 'https://gestion-compromisos-db.onrender.com'; // Verifica que sea correcto.
+
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', function (event) {
             event.preventDefault();
 
             const newCommitment = {
@@ -79,27 +80,35 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
+            }).then((response) => {
+                if (!response.ok) {
+                    throw new Error('No se pudo guardar el compromiso.');
+                }
+                return response.json();
             }).then(() => {
                 alert('Compromiso guardado correctamente.');
                 loadCommitments();
+            }).catch((error) => {
+                console.error('Error al guardar el compromiso:', error);
+                alert('Error al guardar el compromiso.');
             });
         });
 
         function loadCommitments() {
             fetch(`${API_URL}/commitments`)
-                .then(response => response.json())
-                .then(commitments => {
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('No se pudieron cargar los compromisos.');
+                    }
+                    return response.json();
+                })
+                .then((commitments) => {
                     commitmentList.innerHTML = '';
                     commitments.forEach(addCommitmentToTable);
-                });
-        }
-
-        function loadAllCommitments() {
-            fetch(`${API_URL}/admin/commitments`)
-                .then(response => response.json())
-                .then(commitments => {
-                    commitmentList.innerHTML = '';
-                    commitments.forEach(addCommitmentToTable);
+                })
+                .catch((error) => {
+                    console.error('Error al cargar los compromisos:', error);
+                    alert('No se pudieron cargar los compromisos.');
                 });
         }
 
@@ -126,9 +135,17 @@
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ password: 'admin123' })
+                    }).then((response) => {
+                        if (!response.ok) {
+                            throw new Error('No se pudo eliminar el compromiso.');
+                        }
+                        return response.json();
                     }).then(() => {
                         alert('Compromiso eliminado.');
                         loadCommitments();
+                    }).catch((error) => {
+                        console.error('Error al eliminar el compromiso:', error);
+                        alert('Error al eliminar el compromiso.');
                     });
                 } else {
                     alert('Contraseña incorrecta.');
@@ -141,7 +158,21 @@
         document.getElementById('adminViewButton').addEventListener('click', () => {
             const password = prompt('Ingrese la contraseña de administrador:');
             if (password === 'admin123') {
-                loadAllCommitments();
+                fetch(`${API_URL}/admin/commitments`)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('No se pudieron cargar los compromisos de administrador.');
+                        }
+                        return response.json();
+                    })
+                    .then((commitments) => {
+                        commitmentList.innerHTML = '';
+                        commitments.forEach(addCommitmentToTable);
+                    })
+                    .catch((error) => {
+                        console.error('Error al cargar compromisos de administrador:', error);
+                        alert('Error al cargar los compromisos de administrador.');
+                    });
             } else {
                 alert('Contraseña incorrecta.');
             }
