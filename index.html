@@ -60,13 +60,26 @@
     </div>
 
     <script>
-    const API_URL = 'https://gestion-compromisos-db.onrender.com'; 
+    const API_URL = 'https://gestion-compromisos-db.onrender.com';
     const form = document.getElementById('commitmentForm');
     const commitmentList = document.getElementById('commitmentList');
+
+    // Inicializa el ID de usuario
+    const userId = getOrCreateUserId();
 
     document.addEventListener('DOMContentLoaded', () => {
         loadCommitments();
     });
+
+    // Función para crear un nuevo ID de usuario si no existe
+    function getOrCreateUserId() {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+            localStorage.setItem('userId', userId);
+        }
+        return userId;
+    }
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -79,7 +92,7 @@
             municipality: document.getElementById('municipality').value,
             observation: document.getElementById('observation').value,
             creationDate: new Date().toISOString(),
-            userId: localStorage.getItem('userId') || 'default'
+            userId
         };
 
         fetch(`${API_URL}/commitments`, {
@@ -103,10 +116,8 @@
         });
     });
 
+    // Cargar compromisos del usuario
     function loadCommitments() {
-        const userId = localStorage.getItem('userId') || 'default';
-        console.log(`Cargando compromisos para el usuario: ${userId}`);
-
         fetch(`${API_URL}/commitments/${userId}`)
             .then(response => {
                 if (!response.ok) {
@@ -124,6 +135,31 @@
             });
     }
 
+    // Cargar compromisos para la vista de administrador
+    document.getElementById('adminViewButton').addEventListener('click', () => {
+        const password = prompt('Ingrese la contraseña de administrador:');
+        if (password === 'admin123') {
+            fetch(`${API_URL}/admin/commitments`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(commitments => {
+                    commitmentList.innerHTML = '';
+                    commitments.forEach(addCommitmentToTable);
+                })
+                .catch(error => {
+                    console.error('Error al cargar la vista de administrador:', error.message);
+                    alert('No se pudo cargar la vista de administrador.');
+                });
+        } else {
+            alert('Contraseña incorrecta.');
+        }
+    });
+
+    // Agregar compromiso a la tabla
     function addCommitmentToTable(commitment) {
         const row = document.createElement('tr');
 
