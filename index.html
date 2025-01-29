@@ -60,33 +60,140 @@
     </div>
 
    <script>
-    // Código relevante para el frontend
+    const API_URL = 'https://gestion-compromisos-db.onrender.com';
+    const form = document.getElementById('commitmentForm');
+    const commitmentList = document.getElementById('commitmentList');
+
+    // Inicializa el ID de usuario
+    const userId = getOrCreateUserId();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCommitments();
+    });
+
+    // Función para crear un nuevo ID de usuario si no existe
+    function getOrCreateUserId() {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+            localStorage.setItem('userId', userId);
+        }
+        return userId;
+    }
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const newCommitment = {
+            leaderName: document.getElementById('leaderName').value,
+            commitment: document.getElementById('commitment').value,
+            responsible: document.getElementById('responsible').value,
+            responsibleEmail: document.getElementById('responsibleEmail').value,
+            municipality: document.getElementById('municipality').value,
+            observation: document.getElementById('observation').value,
+            creationDate: new Date().toISOString(),
+            userId
+        };
+
+        fetch(`${API_URL}/commitments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newCommitment)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(() => {
+            alert('Compromiso guardado correctamente.');
+            loadCommitments();
+        })
+        .catch(error => {
+            console.error('Error al guardar el compromiso:', error.message);
+            alert('Error al guardar el compromiso. Verifica la conexión y los datos.');
+        });
+    });
+
+    // Cargar compromisos del usuario
+    function loadCommitments() {
+        fetch(`${API_URL}/commitments/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(commitments => {
+                commitmentList.innerHTML = '';
+                commitments.forEach(addCommitmentToTable);
+            })
+            .catch(error => {
+                console.error('Error al cargar compromisos:', error.message);
+                alert('No se pudieron cargar los compromisos. Verifica la conexión.');
+            });
+    }
+
+    // Cargar compromisos para la vista de administrador
+    document.getElementById('adminViewButton').addEventListener('click', () => {
+        const password = prompt('Ingrese la contraseña de administrador:');
+        if (password === 'admin123') {
+            fetch(`${API_URL}/admin/commitments`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(commitments => {
+                    commitmentList.innerHTML = '';
+                    commitments.forEach(addCommitmentToTable);
+                })
+                .catch(error => {
+                    console.error('Error al cargar la vista de administrador:', error.message);
+                    alert('No se pudo cargar la vista de administrador.');
+                });
+        } else {
+            alert('Contraseña incorrecta.');
+        }
+    });
+
+    // Agregar compromiso a la tabla
     function addCommitmentToTable(commitment) {
         const row = document.createElement('tr');
+
         row.innerHTML = `
-            <td>${commitment.leaderName}</td>
-            <td>${commitment.commitment}</td>
-            <td>${commitment.responsible}</td>
-            <td>${commitment.responsibleEmail}</td>
-            <td>${commitment.municipality}</td>
-            <td>${commitment.state}</td>
+            <td>${commitment.leaderName || 'N/A'}</td>
+            <td>${commitment.commitment || 'N/A'}</td>
+            <td>${commitment.responsible || 'N/A'}</td>
+            <td>${commitment.responsibleEmail || 'N/A'}</td>
+            <td>${commitment.municipality || 'N/A'}</td>
+            <td>${commitment.state || 'Activo'}</td>
             <td>${commitment.observation || ''}</td>
             <td>${new Date(commitment.creationDate).toLocaleDateString()}</td>
             <td>
-                <button class="btn btn-primary btn-sm complete-button">Cumplido</button>
                 <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
             </td>
         `;
-        row.querySelector('.complete-button').addEventListener('click', () => {
-            const description = prompt('Describe cómo se cumplió este compromiso:');
-            if (description) {
+
+        row.querySelector('.delete-button').addEventListener('click', () => {
+            const password = prompt('Ingrese la contraseña para eliminar:');
+            if (password === 'admin123') {
                 fetch(`${API_URL}/commitments/${commitment.id}`, {
-                    method: 'PUT',
+                    method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ state: 'Cumplido', observation: description })
-                }).then(() => loadCommitments());
+                    body: JSON.stringify({ password: 'admin123' })
+                }).then(() => {
+                    alert('Compromiso eliminado.');
+                    loadCommitments();
+                });
+            } else {
+                alert('Contraseña incorrecta.');
             }
         });
+
         commitmentList.appendChild(row);
     }
 </script>
+
