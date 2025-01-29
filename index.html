@@ -203,14 +203,14 @@
             const row = document.createElement('tr');
 
             row.innerHTML = `
-                <td>${commitment.leaderName || 'N/A'}</td>
+                <td>${commitment.leaderName || ''}</td>
                 <td>${commitment.commitment || 'N/A'}</td>
                 <td>${commitment.responsible || 'N/A'}</td>
-                <td>${commitment.responsibleEmail || 'N/A'}</td>
+                <td>${commitment.responsibleEmail || ''}</td>
                 <td>${commitment.municipality || 'N/A'}</td>
                 <td><span class="${getStateClass(commitment.state)}">${commitment.state || 'N/A'}</span></td>
                 <td>${commitment.observation || ''}</td>
-                <td>${new Date(commitment.creationDate).toLocaleDateString()}</td>
+                <td>${commitment.creationdate ? new Date(commitment.creationdate).toLocaleDateString('es-CO') : 'N/A'}</td>
                 <td>
                     <button class="btn btn-primary btn-sm complete-button">Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
