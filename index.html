@@ -203,10 +203,10 @@
             const row = document.createElement('tr');
 
             row.innerHTML = `
-                <td>${commitment.leaderName || 'N/A'}</td>
+                <td>${commitment.leadername || 'N/A'}</td>
                 <td>${commitment.commitment || 'N/A'}</td>
                 <td>${commitment.responsible || 'N/A'}</td>
-                <td>${commitment.responsibleEmail || 'N/A'}</td>
+                <td>${commitment.responsibleemail || 'N/A'}</td>
                 <td>${commitment.municipality || 'N/A'}</td>
                 <td><span class="${getStateClass(commitment.state)}">${commitment.state || 'N/A'}</span></td>
                 <td>${commitment.observation || ''}</td>
