@@ -87,22 +87,41 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newCommitment)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(() => {
             alert('Compromiso guardado correctamente.');
             loadCommitments();
         })
-        .catch(() => alert('Error al guardar el compromiso.'));
+        .catch(error => {
+            console.error('Error al guardar el compromiso:', error.message);
+            alert('Error al guardar el compromiso. Verifica la conexión y los datos.');
+        });
     });
 
     function loadCommitments() {
-        fetch(`${API_URL}/commitments/${localStorage.getItem('userId')}`)
-            .then(response => response.json())
+        const userId = localStorage.getItem('userId') || 'default';
+        console.log(`Cargando compromisos para el usuario: ${userId}`);
+
+        fetch(`${API_URL}/commitments/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(commitments => {
                 commitmentList.innerHTML = '';
                 commitments.forEach(addCommitmentToTable);
             })
-            .catch(() => alert('No se pudieron cargar los compromisos.'));
+            .catch(error => {
+                console.error('Error al cargar compromisos:', error.message);
+                alert('No se pudieron cargar los compromisos. Verifica la conexión.');
+            });
     }
 
     function addCommitmentToTable(commitment) {
@@ -140,14 +159,4 @@
 
         commitmentList.appendChild(row);
     }
-
-    document.getElementById('adminViewButton').addEventListener('click', () => {
-        fetch(`${API_URL}/admin/commitments`)
-            .then(response => response.json())
-            .then(commitments => {
-                commitmentList.innerHTML = '';
-                commitments.forEach(addCommitmentToTable);
-            })
-            .catch(() => alert('Error al cargar vista de administrador.'));
-    });
 </script>
