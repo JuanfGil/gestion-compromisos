@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,7 +60,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://gestion-compromisos-db.onrender.com'; // URL del servidor
+        const API_URL = 'https://gestion-compromisos-db.onrender.com'; 
         const form = document.getElementById('commitmentForm');
         const commitmentList = document.getElementById('commitmentList');
 
@@ -82,20 +82,14 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const leaderName = document.getElementById('leaderName').value;
-            const commitment = document.getElementById('commitment').value;
-            const responsible = document.getElementById('responsible').value;
-            const responsibleEmail = document.getElementById('responsibleEmail').value;
-            const municipality = document.getElementById('municipality').value;
-            const observation = document.getElementById('observation').value;
-
             const newCommitment = {
-                leaderName,
-                commitment,
-                responsible,
-                responsibleEmail,
-                municipality,
-                observation,
+                leaderName: document.getElementById('leaderName').value,
+                commitment: document.getElementById('commitment').value,
+                responsible: document.getElementById('responsible').value,
+                responsibleEmail: document.getElementById('responsibleEmail').value,
+                municipality: document.getElementById('municipality').value,
+                observation: document.getElementById('observation').value,
+                creationDate: new Date().toISOString(),
                 userId
             };
 
@@ -104,14 +98,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCommitment)
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('Compromiso guardado correctamente.');
-                    loadCommitments();
-                } else {
-                    alert('Error al guardar el compromiso.');
-                }
-            });
+            .then(response => response.json())
+            .then(() => {
+                alert('Compromiso guardado correctamente.');
+                loadCommitments();
+            })
+            .catch(() => alert('Error al guardar el compromiso.'));
         });
 
         function loadCommitments() {
@@ -119,92 +111,71 @@
                 .then(response => response.json())
                 .then(commitments => {
                     commitmentList.innerHTML = '';
-                    commitments.forEach(commitment => addCommitmentToTable(commitment));
-                })
-                .catch(() => alert('No se pudieron cargar los compromisos.'));
-        }
-
-        function loadAllCommitments() {
-            fetch(`${API_URL}/admin/commitments`)
-                .then(response => response.json())
-                .then(commitments => {
-                    commitmentList.innerHTML = '';
-                    commitments.forEach(commitment => addCommitmentToTable(commitment));
+                    commitments.forEach(addCommitmentToTable);
                 })
                 .catch(() => alert('No se pudieron cargar los compromisos.'));
         }
 
         function addCommitmentToTable(commitment) {
             const row = document.createElement('tr');
-            const creationDate = new Date(commitment.creationDate);
+            const creationDate = commitment.creationDate ? new Date(commitment.creationDate).toLocaleDateString() : 'Fecha Inválida';
 
             row.innerHTML = `
-                <td>${commitment.leaderName || ''}</td>
-                <td>${commitment.commitment || ''}</td>
-                <td>${commitment.responsible || ''}</td>
-                <td>${commitment.responsibleEmail || ''}</td>
-                <td>${commitment.municipality || ''}</td>
+                <td>${commitment.leaderName || 'N/A'}</td>
+                <td>${commitment.commitment || 'N/A'}</td>
+                <td>${commitment.responsible || 'N/A'}</td>
+                <td>${commitment.responsibleEmail || 'N/A'}</td>
+                <td>${commitment.municipality || 'N/A'}</td>
                 <td><span class="badge bg-${getStateClass(commitment.state || 'Activo')}">${commitment.state || 'Activo'}</span></td>
-                <td>${commitment.observation || ''}</td>
-                <td>${!isNaN(creationDate) ? creationDate.toLocaleDateString() : 'Fecha Inválida'}</td>
+                <td>${commitment.observation || 'N/A'}</td>
+                <td>${creationDate}</td>
                 <td>
                     <button class="btn btn-info btn-sm complete-button">Marcar Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
 
-            const deleteButton = row.querySelector('.delete-button');
-            deleteButton.addEventListener('click', () => {
-                const password = prompt('Por favor, ingresa la contraseña para eliminar este compromiso:');
+            row.querySelector('.delete-button').addEventListener('click', () => {
+                const password = prompt('Ingrese la contraseña para eliminar:');
                 if (password === 'admin123') {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'DELETE'
-                    }).then(response => {
-                        if (response.ok) {
-                            alert('Compromiso eliminado correctamente.');
-                            row.remove();
-                        } else {
-                            alert('Error al eliminar el compromiso.');
-                        }
-                    });
+                    fetch(`${API_URL}/commitments/${commitment.id}`, { method: 'DELETE' })
+                        .then(() => {
+                            alert('Compromiso eliminado.');
+                            loadCommitments();
+                        })
+                        .catch(() => alert('Error al eliminar.'));
                 } else {
                     alert('Contraseña incorrecta.');
                 }
             });
 
-            const completeButton = row.querySelector('.complete-button');
-            completeButton.addEventListener('click', () => {
-                fetch(`${API_URL}/commitments/${commitment.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ state: 'Cumplido' })
-                }).then(response => {
-                    if (response.ok) {
+            row.querySelector('.complete-button').addEventListener('click', () => {
+                const description = prompt('Describa cómo se cumplió este compromiso:');
+                if (description) {
+                    fetch(`${API_URL}/commitments/${commitment.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ state: 'Cumplido', observation: description })
+                    })
+                    .then(() => {
                         alert('Compromiso marcado como cumplido.');
                         loadCommitments();
-                    } else {
-                        alert('Error al actualizar el estado del compromiso.');
-                    }
-                });
+                    })
+                    .catch(() => alert('Error al actualizar compromiso.'));
+                }
             });
 
             commitmentList.appendChild(row);
         }
 
         function getStateClass(state) {
-            switch (state) {
-                case 'Vencido': return 'danger';
-                case 'Pendiente': return 'warning';
-                case 'Activo': return 'success';
-                case 'Cumplido': return 'primary';
-                default: return 'secondary';
-            }
+            return { 'Vencido': 'danger', 'Pendiente': 'warning', 'Activo': 'success', 'Cumplido': 'primary' }[state] || 'secondary';
         }
 
         document.getElementById('adminViewButton').addEventListener('click', () => {
             const password = prompt('Ingrese la contraseña de administrador:');
             if (password === 'admin123') {
-                loadAllCommitments();
+                loadCommitments();
             } else {
                 alert('Contraseña incorrecta.');
             }
