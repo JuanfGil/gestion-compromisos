@@ -219,9 +219,6 @@
             `;
             
             //Funcion del boton "Actualizar"
-            const updateButton = row.querySelector('.update-button');
-            const observationCell = row.querySelector('.observation');
-            
             updateButton.addEventListener('click', () => {
                 const newObservation = prompt('Ingrese la nueva observación:', observationCell.textContent);
                 if (newObservation !== null && newObservation.trim() !== '') {
