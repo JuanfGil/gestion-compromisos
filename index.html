@@ -222,22 +222,7 @@
             row.querySelector('.update-button').addEventListener('click', () => {
                 const newObservation = prompt('Ingrese la nueva observación:', commitment.observation || '');
                 if (newObservation !== null) {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ observation: newObservation })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Error en la actualización');
-                        }
-                        return response.json();
-                    })
-                    .then(updatedCommitment => {
-                        alert('Observación actualizada.');
-                        row.querySelector('.observation').textContent = updatedCommitment.observation;
-                    })
-                    .catch(error => console.error('Error al actualizar la observación:', error));
+                    row.querySelector('.observation').textContent = newObservation;
                 }
             });
             
