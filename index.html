@@ -217,12 +217,30 @@
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
-            
-            //Funcion del boton "Actualizar"
-            updateButton.addEventListener('click', () => {
-                const newObservation = prompt('Ingrese la nueva observación:', observationCell.textContent);
-                if (newObservation !== null && newObservation.trim() !== '') {
-                    observationCell.textContent = newObservation;
+
+            //Funcion actualizar
+           row.querySelector('.update-button').addEventListener('click', () => {
+                const newObservation = prompt('Ingrese la nueva observación:', row.querySelector('.observation').textContent);
+                if (newObservation !== null) {
+                    fetch(`${API_URL}/commitments/${commitment.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ observation: newObservation })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la actualización');
+                        }
+                        return response.json();
+                    })
+                    .then(updatedCommitment => {
+                        row.querySelector('.observation').textContent = updatedCommitment.observation;
+                        alert('Observación actualizada correctamente.');
+                    })
+                    .catch(error => {
+                        console.error('Error al actualizar la observación:', error);
+                        alert('No se pudo actualizar la observación.');
+                    });
                 }
             });
             
