@@ -212,37 +212,10 @@
                 <td>${commitment.observation || ''}</td>
                 <td>${commitment.creationdate ? new Date(commitment.creationdate).toLocaleDateString('es-CO') : 'N/A'}</td>
                 <td>
-                    <button class="btn btn-warning btn-sm update-button">Actualizar</button>
                     <button class="btn btn-primary btn-sm complete-button">Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
-
-            //Funcion actualizar
-           row.querySelector('.update-button').addEventListener('click', () => {
-                const newObservation = prompt('Ingrese la nueva observación:', row.querySelector('.observation').textContent);
-                if (newObservation !== null) {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ observation: newObservation })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Error en la actualización');
-                        }
-                        return response.json();
-                    })
-                    .then(updatedCommitment => {
-                        row.querySelector('.observation').textContent = updatedCommitment.observation;
-                        alert('Observación actualizada correctamente.');
-                    })
-                    .catch(error => {
-                        console.error('Error al actualizar la observación:', error);
-                        alert('No se pudo actualizar la observación.');
-                    });
-                }
-            });
             
             // Función del botón "Compromiso Cumplido"
             row.querySelector('.complete-button').addEventListener('click', () => {
