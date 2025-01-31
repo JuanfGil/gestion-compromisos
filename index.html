@@ -219,10 +219,13 @@
             `;
             
             //Funcion del boton "Actualizar"
-            row.querySelector('.update-button').addEventListener('click', () => {
-                const newObservation = prompt('Ingrese la nueva observación:', row.querySelector('.observation').textContent);
-                if (newObservation !== null) {
-                    row.querySelector('.observation').textContent = newObservation;
+            const updateButton = row.querySelector('.update-button');
+            const observationCell = row.querySelector('.observation');
+            
+            updateButton.addEventListener('click', () => {
+                const newObservation = prompt('Ingrese la nueva observación:', observationCell.textContent);
+                if (newObservation !== null && newObservation.trim() !== '') {
+                    observationCell.textContent = newObservation;
                 }
             });
             
