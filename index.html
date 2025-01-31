@@ -212,7 +212,7 @@
                 <td>${commitment.observation || ''}</td>
                 <td>${commitment.creationdate ? new Date(commitment.creationdate).toLocaleDateString('es-CO') : 'N/A'}</td>
                 <td>
-                    <button class="btn btn-secondary btn-sm update-button">Actualizar</button>
+                    <button class="btn btn-warning btn-sm update-button">Actualizar</button>
                     <button class="btn btn-primary btn-sm complete-button">Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
@@ -220,7 +220,7 @@
             
             //Funcion del boton "Actualizar"
             row.querySelector('.update-button').addEventListener('click', () => {
-                const newObservation = prompt('Ingrese la nueva observación:', commitment.observation || '');
+                const newObservation = prompt('Ingrese la nueva observación:', row.querySelector('.observation').textContent);
                 if (newObservation !== null) {
                     row.querySelector('.observation').textContent = newObservation;
                 }
