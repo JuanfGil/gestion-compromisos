@@ -42,6 +42,11 @@
                 <input type="text" id="leaderName" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="leaderPhone" class="form-label">Teléfono del Líder</label>
+                <input type="text" id="leaderPhone" class="form-control" pattern="\d+" required>
+                <div class="form-text">Ingrese solo números.</div>
+            </div>
+            <div class="mb-3">
                 <label for="commitment" class="form-label">Compromiso</label>
                 <textarea id="commitment" class="form-control" rows="3" required></textarea>
             </div>
@@ -70,6 +75,7 @@
             <thead class="table-dark">
                 <tr>
                     <th>Nombre del Líder</th>
+                    <th>Teléfono del Líder</th>
                     <th>Compromiso</th>
                     <th>Responsable</th>
                     <th>Correo Responsable</th>
@@ -115,6 +121,7 @@
 
             const newCommitment = {
                 leaderName: document.getElementById('leaderName').value,
+                leaderPhone: document.getElementById('leaderPhone').value,
                 commitment: document.getElementById('commitment').value,
                 responsible: document.getElementById('responsible').value,
                 responsibleEmail: document.getElementById('responsibleEmail').value,
@@ -206,6 +213,7 @@
 
             row.innerHTML = `
                 <td>${commitment.leadername || 'N/A'}</td>
+                <td>${commitment.leaderphone || ''}</td>
                 <td>${commitment.commitment || 'N/A'}</td>
                 <td>${commitment.responsible || 'N/A'}</td>
                 <td>${commitment.responsibleemail || 'N/A'}</td>
