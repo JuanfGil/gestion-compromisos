@@ -76,8 +76,8 @@
                     <th>Municipio</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
-                    <th>Fecha de Creación</th>
                     <th>Avance</th>
+                    <th>Fecha de Creación</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -211,6 +211,7 @@
                 <td>${commitment.municipality || 'N/A'}</td>
                 <td><span class="${getStateClass(commitment.state)}">${commitment.state || 'N/A'}</span></td>
                 <td>${commitment.observation || ''}</td>
+                <td>${commitment.avancecompromiso || ''}</td>
                 <td>${commitment.creationdate ? new Date(commitment.creationdate).toLocaleDateString('es-CO') : 'N/A'}</td>
                 <td>
                     <button class="btn btn-info btn-sm avance-button" data-id="${commitment.id}">Avance</button>
