@@ -138,6 +138,7 @@
             .then(() => {
                 alert('Compromiso guardado correctamente.');
                 loadCommitments();
+                form.reset(); // Limpia los campos del formulario
             })
             .catch(error => {
                 console.error('Error al guardar el compromiso:', error.message);
