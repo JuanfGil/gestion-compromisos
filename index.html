@@ -219,23 +219,8 @@
                 </td>
             `;
 
-            //Boton avance
-            function addAvance(commitmentId) {
-            const avance = prompt('Ingrese el avance del compromiso:');
-            if (avance) {
-                fetch(`${API_URL}/commitments/${commitmentId}/avance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ avance })
-                })
-                .then(response => response.json())
-                .then(() => {
-                    alert('Avance guardado correctamente.');
-                    loadCommitments();
-                })
-                .catch(error => console.error('Error al guardar el avance:', error));
-            }
-        }
+            // Botón de avance
+            row.querySelector('.avance-button').addEventListener('click', () => addAvance(commitment.id));
             
             // Función del botón "Compromiso Cumplido"
             row.querySelector('.complete-button').addEventListener('click', () => {
@@ -278,6 +263,32 @@
             });
 
             commitmentList.appendChild(row);
+        }
+
+        //funcion avance
+        function addAvance(commitmentId) {
+            const avance = prompt('Ingrese el avance del compromiso:');
+            if (avance) {
+                fetch(`${API_URL}/commitments/${commitmentId}/avance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avance })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al guardar el avance.');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    alert('Avance guardado correctamente.');
+                    loadCommitments();
+                })
+                .catch(error => {
+                    console.error('Error al guardar el avance:', error);
+                    alert('Error al guardar el avance. Verifique la conexión y los datos.');
+                });
+            }
         }
     </script>
 </body>
