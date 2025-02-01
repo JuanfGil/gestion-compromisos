@@ -77,6 +77,7 @@
                     <th>Estado</th>
                     <th>Observaciones</th>
                     <th>Fecha de Creación</th>
+                    <th>Avance</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -212,11 +213,30 @@
                 <td>${commitment.observation || ''}</td>
                 <td>${commitment.creationdate ? new Date(commitment.creationdate).toLocaleDateString('es-CO') : 'N/A'}</td>
                 <td>
+                    <button class="btn btn-info btn-sm avance-button" data-id="${commitment.id}">Avance</button>
                     <button class="btn btn-primary btn-sm complete-button">Cumplido</button>
                     <button class="btn btn-danger btn-sm delete-button">Eliminar</button>
                 </td>
             `;
 
+            //Boton avance
+            function addAvance(commitmentId) {
+            const avance = prompt('Ingrese el avance del compromiso:');
+            if (avance) {
+                fetch(`${API_URL}/commitments/${commitmentId}/avance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avance })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    alert('Avance guardado correctamente.');
+                    loadCommitments();
+                })
+                .catch(error => console.error('Error al guardar el avance:', error));
+            }
+        }
+            
             // Función del botón "Compromiso Cumplido"
             row.querySelector('.complete-button').addEventListener('click', () => {
                 const description = prompt('Describe cómo se cumplió este compromiso:');
