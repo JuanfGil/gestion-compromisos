@@ -175,7 +175,7 @@
         // Cargar compromisos para la vista de administrador
         document.getElementById('adminViewButton').addEventListener('click', () => {
             const password = prompt('Ingrese la contraseña de administrador:');
-            if (password === 'admin123') {
+            if (password === 'geo2026') {
                 fetch(`${API_URL}/admin/commitments`)
                     .then(response => {
                         if (!response.ok) {
@@ -255,7 +255,7 @@
             // Función del botón "Eliminar"
             row.querySelector('.delete-button').addEventListener('click', () => {
                 const password = prompt('Ingrese la contraseña para eliminar:');
-                if (password === 'admin123') {
+                if (password === 'geo2026') {
                     fetch(`${API_URL}/commitments/${commitment.id}`, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
