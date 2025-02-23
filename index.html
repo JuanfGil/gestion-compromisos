@@ -235,24 +235,37 @@
             row.querySelector('.avance-button').addEventListener('click', () => addAvance(commitment.id));
             
             // Función del botón "Compromiso Cumplido"
-            row.querySelector('.complete-button').addEventListener('click', () => {
-                const description = prompt('Describe cómo se cumplió este compromiso:');
-                if (description) {
-                    fetch(`${API_URL}/commitments/${commitment.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ state: 'Cumplido', observation: description })
-                    })
-                    .then(() => {
-                        alert('Compromiso marcado como cumplido.');
-                        loadCommitments();
-                    })
-                    .catch(error => {
-                        console.error('Error al marcar como cumplido:', error.message);
-                        alert('No se pudo actualizar el compromiso.');
-                    });
-                }
-            });
+row.querySelector('.complete-button').addEventListener('click', () => {
+    console.log("🔍 ID del compromiso a actualizar:", commitment.id); // <-- Verificar si el ID es válido
+
+    const description = prompt('Describe cómo se cumplió este compromiso:');
+    if (description) {
+        const url = `${API_URL}/commitments/${commitment.id}`;
+        console.log("📌 URL de la solicitud PUT:", url); // <-- Verificar que la URL se genere correctamente
+
+        fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: 'Cumplido', observation: description })
+        })
+        .then(response => {
+            console.log("🔍 Respuesta del servidor:", response.status, response.statusText);
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(`⚠ Error: ${data.error}`);
+            } else {
+                alert('✅ Compromiso marcado como cumplido.');
+                loadCommitments();
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al marcar como cumplido:', error.message);
+            alert('No se pudo actualizar el compromiso.');
+        });
+    }
+});
 
             // Función del botón "Eliminar"
             row.querySelector('.delete-button').addEventListener('click', () => {
