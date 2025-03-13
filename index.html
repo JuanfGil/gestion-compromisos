@@ -234,58 +234,54 @@
             // Botón de avance
             row.querySelector('.avance-button').addEventListener('click', () => addAvance(commitment.id));
             
-        // Función del botón "Compromiso Cumplido"
-row.querySelector('.complete-button').addEventListener('click', () => {
-    console.log("🔍 ID del compromiso a actualizar:", commitment.id); // <-- Verificar si el ID es válido
+       row.querySelector('.complete-button').addEventListener('click', () => {
+    console.log("🔍 ID del compromiso a actualizar:", commitment.id);
 
     const avance = prompt('Describe cómo se cumplió este compromiso:');
     if (avance) {
-        const urlAvance = `${API_URL}/commitments/${commitment.id}/avance`;
-        console.log("📌 URL de la solicitud POST (avance):", urlAvance);
+        const url = `${API_URL}/commitments/${commitment.id}`;
+        console.log("📌 URL de la solicitud PUT:", url);
 
-        // Guardar el avance sin modificar las observaciones
-        fetch(urlAvance, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ avance }) // Guardamos el avance en la columna 'avanceCompromiso'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(`⚠ Error al guardar el avance: ${data.error}`);
-            } else {
-                console.log("✅ Avance guardado correctamente.");
+        fetch(url) // Primero obtenemos los datos actuales del compromiso
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(`⚠ Error: ${data.error}`);
+                    return;
+                }
 
-                // Ahora actualizamos solo el estado sin tocar las observaciones
-                const urlEstado = `${API_URL}/commitments/${commitment.id}`;
-                console.log("📌 URL de la solicitud PUT (estado):", urlEstado);
+                const observacionesAnteriores = data.observation || ''; // Mantenemos las observaciones previas
 
-                fetch(urlEstado, {
+                fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ state: 'Cumplido' }) // Solo actualizamos el estado
+                    body: JSON.stringify({
+                        state: 'Cumplido',
+                        observation: observacionesAnteriores, // Se mantiene la observación anterior
+                        avanceCompromiso: avance // Solo agregamos el avance
+                    })
                 })
                 .then(response => response.json())
-                .then(updateData => {
-                    if (updateData.error) {
-                        alert(`⚠ Error al actualizar el estado: ${updateData.error}`);
+                .then(updatedData => {
+                    if (updatedData.error) {
+                        alert(`⚠ Error: ${updatedData.error}`);
                     } else {
                         alert('✅ Compromiso marcado como cumplido.');
-                        loadCommitments(); // Recargar la tabla para ver los cambios
+                        loadCommitments();
                     }
                 })
                 .catch(error => {
-                    console.error('❌ Error al actualizar el estado:', error.message);
-                    alert('⚠ Hubo un problema al actualizar el estado. Recargue la página por favor.');
+                    console.error('❌ Error al marcar como cumplido:', error.message);
+                    alert('✅ Compromiso marcado como cumplido, recargue la página por favor.');
                 });
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error al guardar el avance:', error.message);
-            alert('⚠ Hubo un problema al guardar el avance. Recargue la página por favor.');
-        });
+            })
+            .catch(error => {
+                console.error('❌ Error al obtener datos del compromiso:', error.message);
+                alert('✅ Compromiso marcado como cumplido. recargue la página por favor.');
+            });
     }
 });
+
 
 
 
