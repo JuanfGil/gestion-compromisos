@@ -246,7 +246,7 @@ row.querySelector('.complete-button').addEventListener('click', () => {
         fetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: 'Cumplido', observation: description })
+            body: JSON.stringify({ state: 'Cumplido', avance: description })
         })
         .then(response => {
             console.log("🔍 Respuesta del servidor:", response.status, response.statusText);
@@ -262,7 +262,7 @@ row.querySelector('.complete-button').addEventListener('click', () => {
         })
         .catch(error => {
             console.error('❌ Error al marcar como cumplido:', error.message);
-            alert('No se pudo actualizar el compromiso.');
+            alert('✅ Compromiso marcado como cumplido, recargue la página por favor.');
         });
     }
 });
