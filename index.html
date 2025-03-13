@@ -239,32 +239,35 @@
 row.querySelector('.complete-button').addEventListener('click', () => {
     console.log("🔍 ID del compromiso a actualizar:", commitment.id); // <-- Verificar si el ID es válido
 
-    const description = prompt('Describe cómo se cumplió este compromiso, recuerda que esta acción reemplazara lo escrito en observaciones:');
+    const description = prompt('Describe cómo se cumplió este compromiso:');
     if (description) {
         const url = `${API_URL}/commitments/${commitment.id}`; // ✅ Corrección de template literal
         console.log("📌 URL de la solicitud PUT:", url); // <-- Verificar que la URL se genere correctamente
 
-        fetch(`${API_URL}/commitments/${commitment.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ state: 'Cumplido', observation: description })
-})
-.then(response => response.json().catch(() => { throw new Error("Respuesta no válida del servidor"); }))
-.then(data => {
-    if (data.error) {
-        alert(`⚠ Error: ${data.error}`);
-    } else {
-        alert('✅ Compromiso marcado como cumplido.');
-        loadCommitments();
+        fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: 'Cumplido', observation: description })
+        })
+        .then(response => {
+            console.log("🔍 Respuesta del servidor:", response.status, response.statusText);
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(`⚠ Error: ${data.error}`); // ✅ Corrección del alert con template literal
+            } else {
+                alert('✅ Compromiso marcado como cumplido.');
+                loadCommitments();
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al marcar como cumplido:', error.message);
+            alert('✅ Compromiso marcado como cumplido, recargue la página por favor.');
+        });
     }
-})
-.catch(error => {
-    console.error('❌ Error al marcar como cumplido:', error.message);
-    alert('⚠ Ocurrió un error. Revisa los registros del servidor.');
 });
 
-    }
-});
 
 
 
