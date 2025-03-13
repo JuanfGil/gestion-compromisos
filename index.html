@@ -246,7 +246,7 @@ row.querySelector('.complete-button').addEventListener('click', () => {
         fetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: 'Cumplido', avance: description })
+            body: JSON.stringify({ state: 'Cumplido', observation: description })
         })
         .then(response => {
             console.log("🔍 Respuesta del servidor:", response.status, response.statusText);
