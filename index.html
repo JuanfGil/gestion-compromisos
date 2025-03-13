@@ -239,9 +239,9 @@
 row.querySelector('.complete-button').addEventListener('click', () => {
     console.log("🔍 ID del compromiso a actualizar:", commitment.id); // <-- Verificar si el ID es válido
 
-    const description = prompt('Describe cómo se cumplió este compromiso:');
+    const description = prompt('Describe cómo se cumplió este compromiso, recuerda que esta acción reemplazara lo escrito en observaciones:');
     if (description) {
-        const url = ${API_URL}/commitments/${commitment.id};
+        const url = `${API_URL}/commitments/${commitment.id}`; // ✅ Corrección de template literal
         console.log("📌 URL de la solicitud PUT:", url); // <-- Verificar que la URL se genere correctamente
 
         fetch(url, {
@@ -255,7 +255,7 @@ row.querySelector('.complete-button').addEventListener('click', () => {
         })
         .then(data => {
             if (data.error) {
-                alert(⚠ Error: ${data.error});
+                alert(`⚠ Error: ${data.error}`); // ✅ Corrección del alert con template literal
             } else {
                 alert('✅ Compromiso marcado como cumplido.');
                 loadCommitments();
@@ -267,6 +267,7 @@ row.querySelector('.complete-button').addEventListener('click', () => {
         });
     }
 });
+
 
 
 
