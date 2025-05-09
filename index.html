@@ -47,6 +47,10 @@
                 <div class="form-text">Ingrese solo números.</div>
             </div>
             <div class="mb-3">
+                <label for="municipality" class="form-label">Municipio</label>
+                <input type="text" id="municipality" class="form-control" required>
+            </div>
+            <div class="mb-3">
                 <label for="commitment" class="form-label">Compromiso</label>
                 <textarea id="commitment" class="form-control" rows="3" required></textarea>
             </div>
@@ -57,10 +61,6 @@
             <div class="mb-3">
                 <label for="responsibleEmail" class="form-label">Correo del Responsable</label>
                 <input type="email" id="responsibleEmail" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="municipality" class="form-label">Municipio</label>
-                <input type="text" id="municipality" class="form-control" required>
             </div>
             <div class="mb-3">
                 <label for="observation" class="form-label">Observaciones</label>
@@ -76,10 +76,10 @@
                 <tr>
                     <th>Nombre del Líder</th>
                     <th>Teléfono del Líder</th>
+                    <th>Municipio</th>
                     <th>Compromiso</th>
                     <th>Responsable</th>
                     <th>Correo Responsable</th>
-                    <th>Municipio</th>
                     <th>Estado</th>
                     <th>Observaciones</th>
                     <th>Avance</th>
@@ -122,10 +122,10 @@
             const newCommitment = {
                 leaderName: document.getElementById('leaderName').value,
                 leaderPhone: document.getElementById('leaderPhone').value,
+                municipality: document.getElementById('municipality').value,
                 commitment: document.getElementById('commitment').value,
                 responsible: document.getElementById('responsible').value,
                 responsibleEmail: document.getElementById('responsibleEmail').value,
-                municipality: document.getElementById('municipality').value,
                 observation: document.getElementById('observation').value,
                 creationDate: new Date().toISOString(),
                 userId
@@ -216,10 +216,10 @@
             row.innerHTML = `
                 <td>${commitment.leadername || 'N/A'}</td>
                 <td>${commitment.leaderphone || ''}</td>
+                <td>${commitment.municipality || 'N/A'}</td>
                 <td>${commitment.commitment || 'N/A'}</td>
                 <td>${commitment.responsible || 'N/A'}</td>
                 <td>${commitment.responsibleemail || 'N/A'}</td>
-                <td>${commitment.municipality || 'N/A'}</td>
                 <td><span class="${getStateClass(commitment.state)}">${commitment.state || 'N/A'}</span></td>
                 <td>${commitment.observation || ''}</td>
                 <td>${commitment.avancecompromiso || ''}</td>
